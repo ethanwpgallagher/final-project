@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, make_response
+from backend.ml.ml_app import train_model, predict_output
 
 app = Flask(__name__)
 
+model = train_model()
 
 @app.route('/api/v1.0/test', methods=['GET'])
 def test_response():
@@ -18,8 +20,12 @@ def test_response():
     # Add Access-Control-Allow-Origin header to allow cross-site request
     response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
 
-    # Mozilla provides good references for Access Control at:
-    # https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Server-Side_Access_Control
-
     return response
+
+@app.route('/receive_predictions', methods=['POST', 'GET'])
+def receive_predictions():
+    output = predict_output(model)
+    return jsonify(output)
+    
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

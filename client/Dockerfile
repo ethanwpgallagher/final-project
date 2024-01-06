@@ -1,5 +1,13 @@
-FROM node:10.15.2-alpine
-RUN mkdir /frontend
-WORKDIR /frontend
-COPY package.json /frontend/package.json
+# Client (React) Dockerfile
+FROM node:14
+
+WORKDIR /app
+
+COPY package.json ./
 RUN npm install
+
+COPY ./ ./
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
