@@ -29,9 +29,36 @@ def histogram_equalisation(image):
 def resize_image_array(img_array, target_size=(224, 224)):
     return cv2.resize(img_array, target_size)
 
-def display_image(img, title):
-    plt.imshow(img, cmap='gray')
-    plt.title(title)
-    plt.axis('off')
-    plt.show()
+def data_augmentation(img):
+    image = cv2.imread(img)
+    if image is None:
+        print(img)
+        print(f"Error: UNable to read the image at {img}")
+    else:
+        rows, cols, _ = image.shape
+
+    rotation_angle = np.random.uniform(low=-20, high=20)
+    rotation_matrix = cv2.getRotationMatrix2D((cols/2, rows/2), rotation_angle, 1)
+    augmented_image = cv2.warpAffine(image, rotation_matrix, (cols, rows), borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
+    horizontal_shift = np.random.uniform(low=-0.2*cols, high=0.2*cols)
+    horizontal_shift_matrix = np.float32([[1,0,horizontal_shift], [0,1,0]])
+    augmented_image = cv2.warpAffine(augmented_image, horizontal_shift_matrix, (cols, rows), borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
+    vertical_shift = np.random.uniform(low=-0.2*rows, high=0.2*rows)
+    vertical_shift_matrix = np.float32([[1,0,0], [0,1,vertical_shift]])
+    augmented_image = cv2.warpAffine(augmented_image, vertical_shift_matrix, (cols, rows), borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
+    shear_angle = np.random.uniform(low=-20, high=20)
+    shear_matrix = np.float32([[1, np.tan(np.radians(shear_angle)), 0], [0,1,0]])
+    augmented_image = cv2.warpAffine(augmented_image, shear_matrix, (cols, rows), borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
+    zoom_factor = np.random.uniform(low=0.8, high=1.2)
+    zoom_matrix = np.float32([[zoom_factor,0,0], [0,zoom_factor,0]])
+    augmented_image = cv2.warpAffine(augmented_image, zoom_matrix, (cols, rows), borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0))
+
+    if np.random.rand() < 0.5:
+        augmented_image = cv2.flip(augmented_image, 1)
+    
+    return augmented_image
 
