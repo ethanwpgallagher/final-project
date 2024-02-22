@@ -1,37 +1,22 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
-import Home from './pages/Home'
+import Home from './pages/Home';
+import Diagnosis from './pages/Diagnosis';
+import Analysis from './pages/Analysis';
+import About from './pages/About';
 
-function App(){
-  return <Home/>
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/diagnosis" element={<Diagnosis />} />
+        <Route path="/analysis" element={<Analysis />} />
+        <Route path="/about" element={<About />} />
+      </Routes>
+    </Router>
+  );
 }
-
-// function App() {
-//   const [predictions, setPredictions] = useState([]);
-
-//   const handlePredictions = async () => {
-//     try {
-//       const response = await axios.get('http://127.0.0.1:5000/receive_predictions');
-//       setPredictions(response.data);
-//     } catch (error) {
-//       console.error('Error fetching predictions:', error);
-//     }
-//   };
-
-//   return (
-//     <div className="App">
-//       <button onClick={handlePredictions}>Get Predictions</button>
-//       <div>
-//         <h3>Predictions:</h3>
-//         <ul>
-//           {predictions.map((prediction, index) => (
-//             <li key={index}>{prediction}</li>
-//           ))}
-//         </ul>
-//       </div>
-//     </div>
-//   );
-// }
 
 export default App;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -7,41 +8,46 @@ import { MenuItem } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
   appBar: {
+    // your styles here
+  },
   title: {
-    flexGrow: 1
-  }
-}
+    flexGrow: 1,
+    '& a': {
+        color: 'white',
+        textDecoration: 'none'
+    },
+  },
 }));
 
 function TopMenu() {
-    const classes = useStyles();
+  const classes = useStyles();
 
-    return (
-        <AppBar position='fixed' className={classes.appBar}>
-            <Toolbar>
-                <MenuItem>
-                    <Typography variant='h6' className={classes.title}>
-                        Home
-                    </Typography>
-                </MenuItem>
-                <MenuItem>
-                    <Typography variant='h6' className={classes.title}>
-                        Diagnosis Tool
-                    </Typography>
-                </MenuItem>
-                <MenuItem>
-                    <Typography variant='h6' className={classes.title}>
-                        Model Analysis
-                    </Typography>
-                </MenuItem>
-                <MenuItem>
-                    <Typography variant='h6' className={classes.title}>
-                        About
-                    </Typography>
-                </MenuItem>
-            </Toolbar>
-        </AppBar>
-    );
+  return (
+    <AppBar position='fixed' className={classes.appBar}>
+      <Toolbar>
+        <MenuItem>
+          <Typography variant='h6' className={classes.title}>
+            <Link to="/">Home</Link>
+          </Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography variant='h6' className={classes.title}>
+            <Link to="/diagnosis">Diagnosis Tool</Link>
+          </Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography variant='h6' className={classes.title}>
+            <Link to="/analysis">Model Analysis</Link>
+          </Typography>
+        </MenuItem>
+        <MenuItem>
+          <Typography variant='h6' className={classes.title}>
+            <Link to="/about">About</Link>
+          </Typography>
+        </MenuItem>
+      </Toolbar>
+    </AppBar>
+  );
 }
 
 export default TopMenu;

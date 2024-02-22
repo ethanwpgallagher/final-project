@@ -1,6 +1,6 @@
 import React from 'react';
 import TopMenu from '../components/TopMenu';
-import AboutContent from '../components/AboutContent';
+import DiagnosisContent from '../components/DiagnosisContent';
 import Footer from '../components/Footer';
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -10,16 +10,16 @@ const useStyles = makeStyles(theme => ({
     },
   }));
 
-function About() {
+function Diagnosis() {
     const classes = useStyles();
   
     return (
       <div className={classes.root}>
         <TopMenu />
-        <AboutContent />
+        <DiagnosisContent />
         <Footer />
       </div>
     );
   }
   
-  export default About;
+  export default Diagnosis;
