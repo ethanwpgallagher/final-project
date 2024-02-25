@@ -1,0 +1,20 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend/api:/app/api  # Mounting the api directory
+      - ./backend/ml:/app/ml    # Mounting the ml directory
+    ports:
+      - "5000:5000"
+    # Other configurations as needed for the backend container
+  
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    # Other configurations as needed for the client container
