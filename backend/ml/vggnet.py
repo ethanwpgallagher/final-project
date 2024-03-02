@@ -1,6 +1,6 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from keras import datasets, layers, models, losses
+from keras import datasets, layers, models, losses, applications
 
 def vgg_16(weights=None, classes=1000):
     vgg16 = models.Sequential()

@@ -83,12 +83,13 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
   const classes = useStyles();
 
   const options = ['Alexnet', 'VGG16', 'VGG19', 'SPPNet', 'GoogLeNet'];
-  const [selectedOption, setSelectedOption] = React.useState('');
+  const [selectedOption, setSelectedOption] = React.useState(() => {
+    return localStorage.getItem('selectedOption') || '';
+  });
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
-    // You can customize this function based on the selected option
-    console.log(`Selected Option: ${event.target.value}`);
+    localStorage.setItem('selectedOption', event.target.value);
   };
 
   const handleGetDiagnosis = () => {
