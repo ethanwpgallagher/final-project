@@ -2,13 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
     
-def preprocessing(img_path, img_size):
-    img = cv2.imread(img_path)
+def preprocessing(img, img_size, path_needed):
+    if path_needed:
+        original_img = cv2.imread(img)
+        img_path = "path/to/save/processed_image.jpg"  # Modify the path as needed
+        img = original_img.copy()
+    else:
+        img_path = None
+
     img = green_channel_extraction(img)
     img = normalisation(img)
     img = histogram_equalisation(img)
     img = resize_image_array(img, img_size)
-    cv2.imwrite(img_path, img)
+
+    if path_needed:
+        cv2.imwrite(img_path, img)
+        return img_path
+
+    return img
 
 def green_channel_extraction(image):
     image[:,:,0] = 0

@@ -1,28 +1,20 @@
 import numpy as np
 import tensorflow as tf
+import keras
+import os
 
-def train_model():
-    # Sample XOR dataset
-    X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    y = np.array([[0], [1], [1], [0]])
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS = {
+    'Alexnet': os.path.join(BASE_DIR, 'saved_models', 'alexnet.keras'),
+    'VGG16': os.path.join(BASE_DIR, 'saved_models', 'vgg_16.keras')
+}
 
-    # Define a simple neural network using Keras (from TensorFlow)
-    model = tf.keras.Sequential([
-        tf.keras.layers.Dense(8, input_dim=2, activation='relu'),
-        tf.keras.layers.Dense(1, activation='sigmoid')
-    ])
-
-    # Compile the model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-    # Train the model
-    model.fit(X, y, epochs=500, batch_size=4, verbose=0)
+def get_saved_model(model_name):
+    model = MODELS[model_name]
+    if model is not None:
+        return keras.models.load_model(model)
     
-    return model
-
-def predict_output(model):
-    # Test predictions
-    X_test = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    predictions = model.predict(X_test)
-    output_to_send = predictions.tolist()
-    return output_to_send
+def get_prediction(model: keras.Model, test_input):
+    test_input = tf.convert_to_tensor(test_input)
+    test_input = tf.expand_dims(test_input, axis=0)
+    return model.predict(test_input)
