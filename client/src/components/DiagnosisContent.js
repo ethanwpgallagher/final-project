@@ -1,8 +1,9 @@
-import  { React, useState } from 'react';
+import { React, useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Typography, MenuItem, Select, Button, IconButton, CircularProgress } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import DiagnosisResult from './DiagnosisResult';
+import axios from 'axios';
 
 const useStyles = makeStyles((theme) => ({
   toolbar: theme.mixins.toolbar,
@@ -90,10 +91,27 @@ const drClassToSeverity = {
 
 function DiagnosisContent({ handleFileChange, selectedFile, error }) {
   const classes = useStyles();
-  const options = ['Alexnet', 'VGG16', 'VGG19', 'SPPNet', 'GoogLeNet'];
+  const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState(() => localStorage.getItem('selectedOption') || '');
   const [loading, setLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState(false);
+
+  useEffect(() => {
+    fetchModelOptions();
+  }, []);
+
+  const fetchModelOptions = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/get_saved_models');
+      if (response.status != 200) {
+        throw new Error('Couldnt fetch data mush');
+      }
+      const data = response.data;
+      setOptions(data)
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);

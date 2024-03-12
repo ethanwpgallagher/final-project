@@ -5,13 +5,17 @@ import sys
 import cv2
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
-from ml.ml_app import get_prediction, get_saved_model
-import numpy as np
+from ml.ml_app import get_prediction, get_saved_model, get_saved_model_names
 from ml.preprocessing import preprocessing
+from ml.model_logs import parse_model_epochs, parse_model_results
+import numpy as np
+import os
 
 app = Flask(__name__)
 CORS(app)
 app.logger.setLevel(logging.DEBUG)
+epoch_log_parsers = parse_model_epochs.load_logs_from_directory(os.path.dirname(os.path.dirname(__file__)))
+result_log_parsers = parse_model_results.load_logs_from_directory(os.path.dirname(os.path.dirname(__file__)))
 
 @app.route('/receive_predictions', methods=['POST'])
 def receive_predictions():
@@ -37,7 +41,7 @@ def receive_predictions():
             print(image.shape, file=sys.stderr)
             # image = preprocessing(image, (224, 224), False)
 
-            model = get_saved_model(selected_model)
+            model = get_saved_model(str(selected_model))
             if model is not None:
                 diagnosis = get_prediction(model, image).tolist()
                 predicted_class = get_class_from_probabilities(diagnosis[0])
@@ -57,6 +61,18 @@ def receive_predictions():
     app.logger.debug(f"Response content: {response_content}")
 
     return response
+
+@app.route('/get_model_analysis/<model_name>/<train_test_both>', methods=['POST'])
+def get_model_analysis():
+    pass
+
+@app.route('/get_saved_models', methods=['GET'])
+def get_saved_models():
+    try:
+        saved_models = get_saved_model_names()
+        return jsonify(saved_models)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def get_class_from_probabilities(probabilities):
     print(probabilities, file=sys.stderr)
