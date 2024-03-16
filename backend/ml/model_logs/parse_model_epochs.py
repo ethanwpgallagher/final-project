@@ -12,13 +12,26 @@ class Epoch:
         self.val_loss = val_loss
         self.val_accuracy = val_accuracy
 
+    def __str__(self):
+        return f"Epoch {self.epoch_num}: train_loss={self.train_loss}, train_accuracy={self.train_accuracy}, val_loss={self.val_loss}, val_accuracy={self.val_accuracy}"
+
+    def __json__(self):
+        return {
+            'epoch_num': self.epoch_num,
+            'train_loss': self.train_loss,
+            'train_accuracy': self.train_accuracy,
+            'val_loss': self.val_loss,
+            'val_accuracy': self.val_accuracy
+        }
 class EpochLogParser:
     def __init__(self, log_text):
         self.log_text = log_text
-        self.pattern = re.compile('Epoch (\d+)/(\d+).*?loss: (\d+\.\d+) - accuracy: (\d+\.\d+).*?val_loss: (\d+\.\d+) - val_accuracy: (\d+\.\d+)')
-        self.epochs_data = {}
+        self.pattern = re.compile(r'Epoch (\d+)/(\d+).*?loss: (\d+\.\d+) - accuracy: (\d+\.\d+).*?val_loss: (\d+\.\d+) - val_accuracy: (\d+\.\d+)', re.DOTALL)
+        self.epochs_data = self.parse_epochs()
+
 
     def parse_epochs(self):
+        result = {}
         for match in re.finditer(self.pattern, self.log_text):
             epoch_num = int(match.group(1))
             total_epochs = int(match.group(2))
@@ -27,15 +40,29 @@ class EpochLogParser:
             val_loss = float(match.group(5))
             val_accuracy = float(match.group(6))
 
-            epoch = Epoch(epoch_num, loss, accuracy, val_loss, val_accuracy)
-            self.epochs_data[epoch_num] = epoch
+            epoch = {
+                'epoch_num': epoch_num,
+                'total_epochs': total_epochs,
+                'loss': loss,
+                'accuracy': accuracy,
+                'val_loss': val_loss,
+                'val_accuracy': val_accuracy
+            }
+            result[epoch_num] = epoch
+        return result
 
     def get_epoch_data(self, epoch_num):
         return self.epochs_data.get(epoch_num, None)
+    
+    def __str__(self) -> str:
+        return f"epochs_data={self.epochs_data})"
+    
+    def __json__(self):
+        return self.epochs_data
 
 def read_rtf_file(file_path):
-    with open(file_path, 'r') as file:
-        return file.read()    
+    with open(file_path, mode='r') as file:
+            return  file.read()
 
 def load_logs_from_directory(directory):
     logs_directory = os.path.join(directory, 'ml', 'model_logs', 'epoch_logs')
@@ -48,7 +75,5 @@ def load_logs_from_directory(directory):
         file_path = os.path.join(logs_directory, rtf_file)
         log_text = read_rtf_file(file_path)
         parser = EpochLogParser(log_text)
-        parser.parse_epochs()
-        log_parsers[model_name] = parser
-
+        log_parsers[model_name] = parser.epochs_data
     return log_parsers

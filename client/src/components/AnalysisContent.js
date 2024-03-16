@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { MenuItem, Typography, Select, Checkbox, ListItemText, FormControlLabel } from '@material-ui/core';
 import axios from 'axios';
-import { Line } from 'react-chartjs-2'; // Import Line chart from react-chartjs-2
+import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 
 const useStyles = makeStyles(theme => ({
@@ -37,11 +37,23 @@ function AnalysisContent() {
     test: false,
   });
 
+  const [logFetch, setLogFetch] = useState(null);
+
+  const [chartLabels, setChartLabels] = useState([]);
+  const [chartData, setChartData] = useState({ datasets: [] });
+
   useEffect(() => {
-    fetchModelOptions();
+    fetchModelOptionsandLogData();
   }, []);
 
-  const fetchModelOptions = async () => {
+  useEffect(() => {
+    if (selectedModels.length > 0 && (selectedAnalysisOptions.training || selectedAnalysisOptions.test)) {
+      changeGraphData();
+    }
+  }, [selectedModels, selectedAnalysisOptions]);
+  
+
+  const fetchModelOptionsandLogData = async () => {
     try {
       const response = await axios.get('http://localhost:5000/get_saved_models');
       if (response.status !== 200) {
@@ -49,11 +61,99 @@ function AnalysisContent() {
       }
       const data = response.data;
       setModels(data);
+
+      const formData = new FormData();
+      formData.append('models', data.join(','));
+
+      const logResponse = await fetch('http://localhost:5000/get_model_analysis', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!logResponse.ok) {
+        console.error('Error:', logResponse.statusText);
+        return;
+      }
+
+      const result = await logResponse.json();
+      setLogFetch(result);
+
     } catch (error) {
       console.log(error.message);
     }
   };
 
+  const changeGraphData = async () => {
+    try {
+        const trainTestBoth = selectedAnalysisOptions.training ? 'training' : selectedAnalysisOptions.test ? 'test' : 'both';
+        if (trainTestBoth === 'training') {
+          var labels = [];
+          const datasets = [];
+          selectedModels.forEach(modelName => {
+              const modelEpochData = logFetch.epoch_data[modelName.split('.')[0]];
+              if (modelEpochData) {
+                  const modelLossData = [];
+                  const modelAccuracyData = [];
+                  const modelValLossData = [];
+                  const modelValAccuracyData = [];
+                  for (const epochNum in modelEpochData) {
+                      const epochData = modelEpochData[epochNum];
+                      modelLossData.push(epochData.loss);
+                      modelAccuracyData.push(epochData.accuracy);
+                      modelValLossData.push(epochData.val_loss);
+                      modelValAccuracyData.push(epochData.val_accuracy)
+                      labels.push(epochNum.toString());
+                  }
+                  datasets.push({
+                      label: `${modelName} - Loss`,
+                      data: modelLossData,
+                      borderColor: getRandomColor(),
+                      backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                  });
+                  datasets.push({
+                      label: `${modelName} - Accuracy`,
+                      data: modelAccuracyData,
+                      borderColor: getRandomColor(),
+                      backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                  });
+                  datasets.push({
+                      label: `${modelName} - Validation Loss`,
+                      data: modelValLossData,
+                      borderColor: getRandomColor(),
+                      backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                  });
+                  datasets.push({
+                      label: `${modelName} - Validation Accuracy`,
+                      data: modelValAccuracyData,
+                      borderColor: getRandomColor(),
+                      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                  });
+              }
+          });
+          setChartLabels(Array.from(labels));
+          setChartData({ datasets });
+
+          console.log('Labels: ', chartLabels);
+          console.log('Data: ', chartData);
+
+        // Function to generate random color
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+        } else if (trainTestBoth === 'test') {
+
+        } else {
+        }
+    } catch (error) {
+        console.log(error.message);
+    }
+};
+    
   const handleModelChange = (event) => {
     setSelectedModels(event.target.value);
   };
@@ -63,27 +163,6 @@ function AnalysisContent() {
       ...selectedAnalysisOptions,
       [event.target.name]: event.target.checked,
     });
-  };
-
-  // Sample chart data
-  const chartData = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-      {
-        label: 'Sales',
-        data: [65, 59, 80, 81, 56, 55, 40],
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1,
-      },
-      {
-        label: 'Expenses',
-        data: [28, 48, 40, 19, 86, 27, 90],
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
   };
 
   return (
@@ -135,11 +214,12 @@ function AnalysisContent() {
           />
         </div>
         <div className={classes.chartContainer}>
-          <Line data={chartData} />
-        </div>
+          <Line data={{ labels: chartLabels, datasets: chartData.datasets }} />
+      </div>
       </div>
     </main>
   );
 }
 
 export default AnalysisContent;
+
