@@ -4,6 +4,7 @@
 import os
 import re
 import numpy as np
+import json
 
 class Result:
     def __init__(self, confusion_matrix, accuracy, f1, sensitivity, specificity):
@@ -33,7 +34,7 @@ class Result:
     
     def _convert_to_json(self, value):
         if isinstance(value, np.ndarray):
-            return value.tolist()  # Convert NumPy array to Python list
+            return value.tolist()
         else:
             return value
 
@@ -57,21 +58,18 @@ class ResultLogParser:
             rows = confusion_matrix_str.split('\n')
             confusion_matrix = []
             for row in rows:
-                row = row.strip()  # Remove extra whitespaces
-                row = row.replace('\\', '')  # Remove backslashes
-                row = row.replace('[', '').replace(']', '')  # Remove unnecessary brackets
-                # Extract numerical values using regular expression
+                row = row.strip()
+                row = row.replace('\\', '')
+                row = row.replace('[', '').replace(']', '')
                 row_values = [int(val) for val in row.split()]
-                if row_values:  # Check if the row is not empty
+                if row_values:
                     confusion_matrix.append(row_values)
-
-            # Check if all rows have the same length
             row_lengths = set(len(row) for row in confusion_matrix)
             if len(row_lengths) != 1:
                 print("Error: Inconsistent row lengths in the confusion matrix.")
                 return
 
-            cm = np.array(confusion_matrix, dtype=int)
+            cm = np.array(confusion_matrix, dtype=int).tolist()
             self.result_data['Confusion Matrix'] = cm
         else:
             self.result_data['Confusion Matrix'] = None
@@ -86,12 +84,12 @@ class ResultLogParser:
 
     def parse_sensitivity(self):
         sensitivity_str = re.findall(r'Sensitivity for each class: \[(.*?)\]', self.log_text)[0]
-        sensitivity_str_arr = np.array([float(val) for val in sensitivity_str.split()])
+        sensitivity_str_arr = np.array([float(val) for val in sensitivity_str.split()]).tolist()
         self.result_data['Sensitivity'] = sensitivity_str_arr
 
     def parse_specificity(self):
         specificity_str = re.findall(r'Specificity for each class: \[(.*?)\]', self.log_text)[0]
-        specificity_str_arr = np.array([float(val) for val in specificity_str.split()])
+        specificity_str_arr = np.array([float(val) for val in specificity_str.split()]).tolist()
         self.result_data['Specificity'] = specificity_str_arr
 
     def __str__(self):
@@ -104,7 +102,14 @@ class ResultLogParser:
         return result_str
     
     def __json__(self):
-        return self.result_data
+        return json.dumps(self.result_data)
+    
+    def __getstate__(self):
+        return {'log_text': self.log_text, 'result_data': self.result_data}
+
+    def __setstate__(self, state):
+        self.log_text = state['log_text']
+        self.result_data = state['result_data']
         
 def read_rtf_file(file_path):
     with open(file_path, 'r') as file:

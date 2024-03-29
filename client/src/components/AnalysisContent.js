@@ -4,6 +4,7 @@ import { MenuItem, Typography, Select, Checkbox, ListItemText, FormControlLabel 
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
+import { ConfusionMatrix } from 'react-confusion-matrix';
 
 const useStyles = makeStyles(theme => ({
   toolbar: theme.mixins.toolbar,
@@ -41,6 +42,9 @@ function AnalysisContent() {
 
   const [chartLabels, setChartLabels] = useState([]);
   const [chartData, setChartData] = useState({ datasets: [] });
+  
+  const [confMatLabels, setConfMatLabels] = useState([]);
+  const [confMatData, setConfMatData] = useState([]);
 
   useEffect(() => {
     fetchModelOptionsandLogData();
@@ -82,6 +86,15 @@ function AnalysisContent() {
       console.log(error.message);
     }
   };
+
+  function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
 
   const changeGraphData = async () => {
     try {
@@ -135,18 +148,51 @@ function AnalysisContent() {
 
           console.log('Labels: ', chartLabels);
           console.log('Data: ', chartData);
-
-        // Function to generate random color
-        function getRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        }
+        
         } else if (trainTestBoth === 'test') {
+          var labels = [];
+          const datasets = [];
+          selectedModels.forEach(modelName => {
+            const modelResultData = logFetch.result_data[modelName.split('.')[0]];
+            if (modelResultData) {
+              const modelTestAccuracy = modelResultData['Accuracy'];
+              const modelF1Score = modelResultData['F1 Score'];
+              const modelSensitivity = modelResultData['Sensitivity'];
+              const modelSpecificity = modelResultData['Specificity'];
+              
+              datasets.push({
+                label: `${modelName} - Test Accuracy`,
+                data: [modelTestAccuracy*100],
+                borderColor: getRandomColor(),
+                backgroundColor: getRandomColor(),
+              });
 
+              datasets.push({
+                label: `${modelName} - F1 Score`,
+                data: [modelF1Score*100],
+                borderColor: getRandomColor(),
+                backgroundColor: getRandomColor(),
+              });
+
+              datasets.push({
+                label: `${modelName} - Sensitivity`,
+                data: modelSensitivity.map(value => value * 100),
+                borderColor: getRandomColor(),
+                backgroundColor: getRandomColor(),
+              });
+
+              datasets.push({
+                label: `${modelName} - Specificity`,
+                data: modelSpecificity.map(value => value * 100),
+                borderColor: getRandomColor(),
+                backgroundColor: getRandomColor(),
+              });
+              const confusionMatrixLabels = ['No DR', 'Mild', 'Moderate', 'Severe', 'Proliferative DR'];
+              const modelConfMatrix = modelResultData['Confusion Matrix'];
+              setConfMatLabels(confusionMatrixLabels);
+              setConfMatData(modelConfMatrix);
+            }
+          });
         } else {
         }
     } catch (error) {
@@ -216,6 +262,11 @@ function AnalysisContent() {
         <div className={classes.chartContainer}>
           <Line data={{ labels: chartLabels, datasets: chartData.datasets }} />
       </div>
+      { confMatData && confMatLabels && (
+        <div className={classes.confMatContainer}>
+              <ConfusionMatrix data={confMatData} labels={confMatLabels}/>
+        </div>
+      )}
       </div>
     </main>
   );

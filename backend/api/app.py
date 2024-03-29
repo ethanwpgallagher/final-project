@@ -16,6 +16,7 @@ CORS(app)
 app.logger.setLevel(logging.DEBUG)
 epoch_log_parsers = parse_model_epochs.load_logs_from_directory(os.path.dirname(os.path.dirname(__file__)))
 result_log_parsers = parse_model_results.load_logs_from_directory(os.path.dirname(os.path.dirname(__file__)))
+serialized_results = {model_name: parser.__json__() for model_name, parser in result_log_parsers.items()}
 
 @app.route('/receive_predictions', methods=['POST'])
 def receive_predictions():
@@ -69,12 +70,8 @@ def get_model_analysis():
         for name in selected_models.split('%2C'):
             name = name.split('.')[0]
             epoch_return[name] = epoch_log_parsers[name]
-            result_return[name] = result_log_parsers[name]
-        # for i in epoch_return:
-        #     print(epoch_return[i], file=sys.stderr)
-        # for i in result_return:
-        #     print(result_return[i], file=sys.stderr)
-        response = jsonify({'epoch_data': epoch_return})
+            result_return[name] = serialized_results[name]
+        response = jsonify({'epoch_data': epoch_return, 'result_data': result_return})
         response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         response.status_code = 200

@@ -11,11 +11,12 @@ import numpy as np
 from alexnet import alex_net
 from vggnet import vgg_16, vgg_19
 from sklearn.utils.class_weight import compute_class_weight
-from preprocessing import preprocessing, kaggle_augment_training_image, kaggle_bloke_preprocessing
+from preprocessing import preprocessing, kaggle_augment_training_image, kaggle_bloke_preprocessing, treeve_function_hopeful_fix, hopeful_preprocessing
 import cv2
 
 DATASET_DIRECTORY = "/Users/ethan/Downloads/diabetic-retinopathy-detection-2/train"
 NEW_DATASET_DIRECTORY = "/Users/ethan/Downloads/diabetic-retinopathy-detection-2/new-train copy"
+MESSIDOR = '/Users/ethan/Downloads/Messidor2/train copy'
 
 def sort_dataset():
     label_dict = {}
@@ -108,50 +109,62 @@ def print_left_right_images(source_directory):
 
         print(f"Class {class_id}: Left - {left_count}, Right - {right_count}")
 
-def create_new_dataset(source_directory, destination_directory, target_count_per_eye=2500):
+def create_new_dataset(source_directory, destination_directory, target_count=5000):
+    destination_train_folder = os.path.join(destination_directory, 'train')
+    destination_test_folder = os.path.join(destination_directory, 'test')
+    
+    os.makedirs(destination_train_folder, exist_ok=True)
+    os.makedirs(destination_test_folder, exist_ok=True)
     for class_id in range(5):
         class_folder = os.path.join(source_directory, str(class_id))
-        destination_class_folder = os.path.join(destination_directory, str(class_id))
+        destination_train_class_folder = os.path.join(destination_train_folder, str(class_id))
+        destination_test_class_folder = os.path.join(destination_test_folder, str(class_id))
 
         if not os.path.exists(class_folder):
             continue
 
-        os.makedirs(destination_class_folder, exist_ok=True)
+        os.makedirs(destination_train_class_folder, exist_ok=True)
+        os.makedirs(destination_test_class_folder, exist_ok=True)
 
-        left_count, right_count = count_left_right_images(class_folder)
+        selected_images = random.sample([file for file in os.listdir(class_folder)], min(target_count, len(os.listdir(class_folder))))
+        
+        test_images = selected_images[:500]
+        train_images = selected_images[500:]
 
-        # Get list of original images for left and right eyes
-        left_images = os.listdir(os.path.join(class_folder, 'left'))
-        right_images = os.listdir(os.path.join(class_folder, 'right'))
-
-        # Sample 2500 images per eye if count exceeds 2500
-        selected_left_images = random.sample(left_images, min(target_count_per_eye, left_count))
-        selected_right_images = random.sample(right_images, min(target_count_per_eye, right_count))
-
-        # Copy selected images to the destination directory
-        for image in selected_left_images:
-            source_path = os.path.join(class_folder, 'left', image)
-            destination_path = os.path.join(destination_class_folder, image)
+        for image in test_images:
+            source_path = os.path.join(class_folder, image)
+            destination_path = os.path.join(destination_test_class_folder, image)
             shutil.copyfile(source_path, destination_path)
 
-        for image in selected_right_images:
-            source_path = os.path.join(class_folder, 'right', image)
-            destination_path = os.path.join(destination_class_folder, image)
+        for image in train_images:
+            source_path = os.path.join(class_folder, image)
+            destination_path = os.path.join(destination_train_class_folder, image)
             shutil.copyfile(source_path, destination_path)
 
-def maybe_augment_folder(directory):
-    class_folder = os.path.join(directory, str(4))
-    
-    # Create a subset of the directory containing only original images
-    original_images = [image for image in os.listdir(class_folder) if 'augmented' not in os.path.join(class_folder, image)]
-    for image in original_images:
-        source_path = os.path.join(class_folder, image)
-        augmented_image = kaggle_augment_training_image(cv2.imread(source_path))
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        augmented_destination_path = os.path.join(class_folder, f"augmented_{image}_{timestamp}.jpeg")
-        cv2.imwrite(augmented_destination_path, augmented_image)
-        if len(os.listdir(class_folder)) >= 5000:
-            break
+def maybe_augment_folder(directory, target_count=1017):
+    for i in range(5):
+        class_folder = os.path.join(directory, str(i))
+
+        total_count = len(os.listdir(class_folder))
+        if total_count < target_count:
+            images_needed = target_count - total_count
+            images_per_file = images_needed // total_count
+            remainder = images_needed % total_count
+
+            for image in os.listdir(class_folder):
+                if 'augmented' not in image:
+                    source_path = os.path.join(class_folder, image)
+                    num_augmentations = images_per_file + (1 if remainder > 0 else 0)
+                    remainder -= 1
+
+                    for _ in range(num_augmentations):
+                        augmented_image = kaggle_augment_training_image(cv2.imread(source_path))
+                        if augmented_image is not None:
+                            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                            augmented_destination_path = os.path.join(class_folder, f"augmented_{image.replace('.jpeg', '')}_{timestamp}.jpeg")
+                            cv2.imwrite(augmented_destination_path, augmented_image)
+                        if len(os.listdir(class_folder)) > target_count:
+                            return
 
 def count_left_right_images(class_folder):
     left_folder = os.path.join(class_folder, 'left')
@@ -162,35 +175,14 @@ def count_left_right_images(class_folder):
 
     return left_count, right_count
 
-def random_sample_with_unique_ids(folder, sample_size):
-    images_by_patient = {}
-    unique_ids = set()
-
-    for image in os.listdir(folder):
-        patient_id = image.split('_')[0]
-        images_by_patient.setdefault(patient_id, []).append(image)
-
-    selected_images = []
-    while len(selected_images) < sample_size:
-        remaining_sample_size = sample_size - len(selected_images)
-        for patient_id, images in images_by_patient.items():
-            if remaining_sample_size <= 0:
-                break
-            selected = min(len(images), remaining_sample_size)
-            selected_images.extend(random.sample(images, selected))
-            unique_ids.add(patient_id)
-            remaining_sample_size -= selected
-
-    return selected_images
-
-
 def new_process_images_in_directory(directory, img_size=(224, 224)):
     for root, _, files in os.walk(directory):
+        print("Processing images in folder:", root)
         for filename in files:
-            if filename.endswith(('.jpeg', '.jpg', '.png')):
+            if filename.endswith(('.jpeg', '.jpg', '.png', '.JPG')):
                 img_path = os.path.join(root, filename)
-                kaggle_bloke_preprocessing(img_path)
-                print(filename)
+                hopeful_preprocessing(img_path)
+        
 
 def process_images_in_directory(directory_path, img_size=(224, 224)):
     for root, _, files in os.walk(directory_path):
@@ -277,52 +269,65 @@ def apply_data_augmentation(image, label):
     return augmented_image, label
 
 if __name__ == "__main__":
-    # new_process_images_in_directory(NEW_DATASET_DIRECTORY)
+    # test_class_folders = get_class_folders(os.path.join(NEW_DATASET_DIRECTORY, "test"))
+    # train_class_folders = get_class_folders(os.path.join(NEW_DATASET_DIRECTORY, "train"))
+
+    # # Plot average image statistics per class in test and train folders
+    # print("Average image statistics per class in test folder:")
+    # plot_average_image_statistics_per_class(test_class_folders)
+
+    # print("Average image statistics per class in train folder:")
+    # plot_average_image_statistics_per_class(train_class_folders)
+    # create_new_dataset(DATASET_DIRECTORY, NEW_DATASET_DIRECTORY)
+    # new_process_images_in_directory(MESSIDOR)
+    for i in range(50):
+        maybe_augment_folder(MESSIDOR)
+        print(get_class_weights(MESSIDOR))
     # testing_set = '/Users/ethan/Desktop/ComputerScienceUniWork/Year 3/FinalProject/final-project/backend/ml/testing_images'
     # for root, dirs, files in os.walk(testing_set):
     #     for file in files:
     #         file_path = os.path.join(root, file)
     #         if file_path.endswith(('.jpeg', '.jpg', '.png')):
     #             kaggle_bloke_preprocessing(file_path)
-    train_ds, val_ds = load_dataset()
-    augmented_train_ds = train_ds.map(apply_data_augmentation)
-    alexnet = alex_net(input_shape=(224, 224, 3))
+    # train_ds, val_ds = load_dataset()
+    # augmented_train_ds = train_ds.map(apply_data_augmentation)
+    # alexnet = alex_net(input_shape=(224, 224, 3))
 
-    # Build the model
-    alexnet.build(input_shape=(224, 224, 3))
+    # # Build the model
+    # alexnet.build(input_shape=(224, 224, 3))
 
-    # Compile the model
-    epochs = 20
-    log_dir = './logs'
-    callbacks = [
-        keras.callbacks.ModelCheckpoint("alexnet_at_{epoch}.keras"),
-        keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, write_images=True),
-        keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
-    ]
+    # # Compile the model
+    # epochs = 20
+    # log_dir = './logs'
+    # callbacks = [
+    #     keras.callbacks.ModelCheckpoint("alexnet_at_{epoch}.keras"),
+    #     keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, write_images=True),
+    #     keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
+    # ]
 
-    alexnet.summary()
-    alexnet.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    # alexnet.summary()
+    # alexnet.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
-    history = alexnet.fit(
-        augmented_train_ds,
-        epochs=epochs,
-        callbacks=callbacks,
-        validation_data=val_ds,
-        class_weight=dict(enumerate(get_class_weights(directory=DATASET_DIRECTORY)))
-        )
+    # history = alexnet.fit(
+    #     augmented_train_ds,
+    #     epochs=epochs,
+    #     callbacks=callbacks,
+    #     validation_data=val_ds,
+    #     class_weight=dict(enumerate(get_class_weights(directory=DATASET_DIRECTORY)))
+    #     )
         
-    fig, axs = plt.subplots(2, 1, figsize=(15, 15))
-    axs[0].plot(history.history['loss'])
-    axs[0].plot(history.history['val_loss'])
-    axs[0].set_title('Training Loss vs Validation Loss')
-    axs[0].set_xlabel('Epochs')
-    axs[0].set_ylabel('Loss')
-    axs[0].legend(['Train', 'Val'])
-    axs[1].plot(history.history['accuracy'])
-    axs[1].plot(history.history['val_accuracy'])
-    axs[1].set_title('Training Accuracy vs Validation Accuracy')
-    axs[1].set_xlabel('Epochs')
-    axs[1].set_ylabel('Accuracy')
-    axs[1].legend(['Train', 'Val'])
-    plt.show()
+    # fig, axs = plt.subplots(2, 1, figsize=(15, 15))
+    # axs[0].plot(history.history['loss'])
+    # axs[0].plot(history.history['val_loss'])
+    # axs[0].set_title('Training Loss vs Validation Loss')
+    # axs[0].set_xlabel('Epochs')
+    # axs[0].set_ylabel('Loss')
+    # axs[0].legend(['Train', 'Val'])
+    # axs[1].plot(history.history['accuracy'])
+    # axs[1].plot(history.history['val_accuracy'])
+    # axs[1].set_title('Training Accuracy vs Validation Accuracy')
+    # axs[1].set_xlabel('Epochs')
+    # axs[1].set_ylabel('Accuracy')
+    # axs[1].legend(['Train', 'Val'])
+    # plt.show()
 
