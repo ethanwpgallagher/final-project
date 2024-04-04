@@ -1,7 +1,15 @@
 import React from "react";
+import PropTypes from 'prop-types';
 import { Typography, Button } from "@material-ui/core";
 
-function DiagnosisResult({selectedFile, diagnosis, onRemoveImage, onGoBack}) {
+DiagnosisResult.propTypes = {
+    selectedFile: PropTypes.object,
+    diagnosis: PropTypes.string,
+    onRemoveImage: PropTypes.func, // Assuming you might use this prop in future
+    onGoBack: PropTypes.func.isRequired,
+};
+
+function DiagnosisResult({selectedFile, diagnosis, onGoBack}) {
     return (
         <div>
             <Typography variant="h6">Diagnosis Result</Typography>

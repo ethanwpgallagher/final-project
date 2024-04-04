@@ -4,7 +4,7 @@ import AboutContent from '../components/AboutContent';
 import Footer from '../components/Footer';
 import { makeStyles } from '@material-ui/core/styles';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
     root: {
       display: 'flex',
     },

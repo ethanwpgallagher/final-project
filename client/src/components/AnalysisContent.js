@@ -99,9 +99,9 @@ function AnalysisContent() {
   const changeGraphData = async () => {
     try {
         const trainTestBoth = selectedAnalysisOptions.training ? 'training' : selectedAnalysisOptions.test ? 'test' : 'both';
+        var labels = [];
+        const datasets = [];
         if (trainTestBoth === 'training') {
-          var labels = [];
-          const datasets = [];
           selectedModels.forEach(modelName => {
               const modelEpochData = logFetch.epoch_data[modelName.split('.')[0]];
               if (modelEpochData) {
@@ -150,8 +150,6 @@ function AnalysisContent() {
           console.log('Data: ', chartData);
         
         } else if (trainTestBoth === 'test') {
-          var labels = [];
-          const datasets = [];
           selectedModels.forEach(modelName => {
             const modelResultData = logFetch.result_data[modelName.split('.')[0]];
             if (modelResultData) {
@@ -194,6 +192,7 @@ function AnalysisContent() {
             }
           });
         } else {
+          console.log('TODO');
         }
     } catch (error) {
         console.log(error.message);

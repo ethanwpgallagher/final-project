@@ -4,6 +4,15 @@ import { Typography, MenuItem, Select, Button, IconButton, CircularProgress } fr
 import CloseIcon from '@material-ui/icons/Close';
 import DiagnosisResult from './DiagnosisResult';
 import axios from 'axios';
+import { PropTypes } from 'prop-types';
+
+DiagnosisContent.propTypes = {
+  handleFileChange: PropTypes.func.isRequired,
+  selectedFile: PropTypes.string,
+  error: PropTypes.shape({
+    message: PropTypes.string,
+  }),
+};
 
 const useStyles = makeStyles((theme) => ({
   toolbar: theme.mixins.toolbar,
@@ -143,7 +152,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
       console.error(error.message);
     } finally {
       setLoading(false);
-    };
+    }
   };
     
   const handleRemoveImage = () => {
@@ -228,7 +237,6 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
           <DiagnosisResult
           selectedFile={selectedFile}
           diagnosis={diagnosisResult}
-          onRemoveImage={handleRemoveImage}
           onGoBack={onGoBack}
           />
         )}

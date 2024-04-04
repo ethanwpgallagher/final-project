@@ -1,7 +1,7 @@
 // .eslintrc.js
 
 module.exports = {
-    parser: 'babel-eslint', // Use babel-eslint parser for parsing JavaScript files
+    parser: '@babel/eslint-parser', // Use babel-eslint parser for parsing JavaScript files
     extends: ['eslint:recommended', 'plugin:react/recommended'],
     plugins: ['react', 'react-hooks'],
     rules: {
