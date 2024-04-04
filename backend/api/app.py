@@ -30,12 +30,13 @@ def receive_predictions():
 
         image_bytes = selected_file.read()
 
-        # Decode base64 image (if needed)
-        # image_bytes = base64.b64decode(image_bytes)
-
-        image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), -1)
-        image = image.reshape(224, 224, 1)
-        image = np.repeat(image, 3, axis=-1)
+        image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image = cv2.medianBlur(image, 5)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        image = clahe.apply(image)
+        image = cv2.resize(image, (224, 224))
+        image = np.stack((image,)*3, axis=-1)
         print(image.shape, file=sys.stderr)
         # image = preprocessing(image, (224, 224), False)
 
