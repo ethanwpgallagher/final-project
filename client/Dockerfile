@@ -1,5 +1,5 @@
 # Client (React) Dockerfile
-FROM node:14
+FROM node:16
 
 WORKDIR /app
 

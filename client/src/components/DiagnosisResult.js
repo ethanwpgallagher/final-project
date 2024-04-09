@@ -1,7 +1,14 @@
 import React from "react";
-import { Typography, Button } from "@material-ui/core";
+import PropTypes from 'prop-types';
+import { Typography, Button } from "@mui/material";
 
-function DiagnosisResult({selectedFile, diagnosis, onRemoveImage, onGoBack}) {
+DiagnosisResult.propTypes = {
+    selectedFile: PropTypes.object,
+    diagnosis: PropTypes.string,
+    onGoBack: PropTypes.func.isRequired,
+};
+
+function DiagnosisResult({ selectedFile, diagnosis, onGoBack }) {
     return (
         <div>
             <Typography variant="h6">Diagnosis Result</Typography>
@@ -16,7 +23,7 @@ function DiagnosisResult({selectedFile, diagnosis, onRemoveImage, onGoBack}) {
                 </div>
             )}
             <Typography variant="body1">Diagnosis: {diagnosis}</Typography>
-            <Button variant="contained" color="primary" onClick={onGoBack}>Go Back</Button>
+            <Button variant="contained" onClick={onGoBack} sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}>Go Back</Button>
         </div>
     );
 }

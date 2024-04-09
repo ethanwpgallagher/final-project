@@ -1,52 +1,54 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { makeStyles } from '@material-ui/core/styles';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import { MenuItem } from '@material-ui/core';
+import { styled } from '@mui/material/styles';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import MenuItem from '@mui/material/MenuItem';
 
-const useStyles = makeStyles(theme => ({
-  appBar: {
-    // your styles here
+const PREFIX = 'TopMenu';
+
+const Root = styled('div')({
+  [`& .${PREFIX}-appBar`]: {
+    // Add your AppBar styles here if needed
   },
-  title: {
+  [`& .${PREFIX}-title`]: {
     flexGrow: 1,
     '& a': {
         color: 'white',
         textDecoration: 'none'
     },
   },
-}));
+});
 
 function TopMenu() {
-  const classes = useStyles();
-
   return (
-    <AppBar position='fixed' className={classes.appBar}>
-      <Toolbar>
-        <MenuItem>
-          <Typography variant='h6' className={classes.title}>
-            <Link to="/">Home</Link>
-          </Typography>
-        </MenuItem>
-        <MenuItem>
-          <Typography variant='h6' className={classes.title}>
-            <Link to="/diagnosis">Diagnosis Tool</Link>
-          </Typography>
-        </MenuItem>
-        <MenuItem>
-          <Typography variant='h6' className={classes.title}>
-            <Link to="/analysis">Model Analysis</Link>
-          </Typography>
-        </MenuItem>
-        <MenuItem>
-          <Typography variant='h6' className={classes.title}>
-            <Link to="/about">About</Link>
-          </Typography>
-        </MenuItem>
-      </Toolbar>
-    </AppBar>
+    <Root>
+      <AppBar position="fixed" className={`${PREFIX}-appBar`}>
+        <Toolbar>
+          <MenuItem>
+            <Typography variant="h6" className={`${PREFIX}-title`}>
+              <Link to="/">Home</Link>
+            </Typography>
+          </MenuItem>
+          <MenuItem>
+            <Typography variant="h6" className={`${PREFIX}-title`}>
+              <Link to="/diagnosis">Diagnosis Tool</Link>
+            </Typography>
+          </MenuItem>
+          <MenuItem>
+            <Typography variant="h6" className={`${PREFIX}-title`}>
+              <Link to="/analysis">Model Analysis</Link>
+            </Typography>
+          </MenuItem>
+          <MenuItem>
+            <Typography variant="h6" className={`${PREFIX}-title`}>
+              <Link to="/about">About</Link>
+            </Typography>
+          </MenuItem>
+        </Toolbar>
+      </AppBar>
+    </Root>
   );
 }
 

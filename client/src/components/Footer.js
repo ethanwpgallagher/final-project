@@ -1,34 +1,32 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import AppBar from '@material-ui/core/AppBar';
-import Typography from '@material-ui/core/Typography';
+import { styled } from '@mui/material/styles';
+import AppBar from '@mui/material/AppBar';
+import Typography from '@mui/material/Typography';
 
-const useStyles = makeStyles(theme => ({
-  appBar: {
+const PREFIX = 'Footer';
+
+const StyledAppBar = styled(AppBar)({
+  [`&.${PREFIX}-appBar`]: {
     top: 'auto',
     bottom: 0,
   },
-  menuButton: {
-    marginRight: theme.spacing(2),
-  },
-  title: {
+  [`& .${PREFIX}-title`]: {
     flexGrow: 1,
     marginLeft: 10,
   },
-  footer: {
+  [`& .${PREFIX}-footer`]: {
     marginLeft: 20,
     fontSize: 17,
   },
-}));
+});
 
 function Footer() {
-    const classes = useStyles();
     return (
-        <AppBar position='fixed' className={classes.appBar}>
-            <Typography variant='h6' className={classes.footer}>
+        <StyledAppBar position='fixed' className={`${PREFIX}-appBar`}>
+            <Typography variant='h6' className={`${PREFIX}-footer`}>
                 © Copyright 2024
             </Typography>
-        </AppBar>
+        </StyledAppBar>
     );
 }
 

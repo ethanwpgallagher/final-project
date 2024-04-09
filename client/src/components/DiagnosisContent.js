@@ -1,19 +1,26 @@
-import  { React, useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Typography, MenuItem, Select, Button, IconButton, CircularProgress } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
+import { React, useState, useEffect } from 'react';
+import { styled } from '@mui/material/styles';
+import { Typography, MenuItem, Select, Button, IconButton, CircularProgress } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import DiagnosisResult from './DiagnosisResult';
+import axios from 'axios';
+import { PropTypes } from 'prop-types';
 
-const useStyles = makeStyles((theme) => ({
-  toolbar: theme.mixins.toolbar,
-  title: {
+const PREFIX = 'DiagnosisContent';
+
+const Root = styled('main')(({ theme }) => ({
+  [`&.${PREFIX}-fullWidth`]: {
+    width: '100%',
+  },
+  [`& .${PREFIX}-toolbar`]: theme.mixins.toolbar,
+  [`& .${PREFIX}-title`]: {
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
     padding: theme.spacing(3),
     display: 'flex',
-    alignItems: 'center', // Align items vertically
+    alignItems: 'center',
   },
-  content: {
+  [`& .${PREFIX}-content`]: {
     flexGrow: 1,
     padding: theme.spacing(3),
     display: 'flex',
@@ -22,33 +29,30 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     textAlign: 'center',
   },
-  fullWidth: {
-    width: '100%',
-  },
-  imageContainer: {
+  [`& .${PREFIX}-imageContainer`]: {
     marginTop: theme.spacing(2),
     textAlign: 'center',
-    position: 'relative'
-  },
-  customFileInputContainer: {
     position: 'relative',
-    display: 'flex', // Display children in a row
-    flexDirection: 'row', // Align children vertically
-    alignItems: 'center', // Center children horizontally
+  },
+  [`& .${PREFIX}-customFileInputContainer`]: {
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: theme.spacing(2),
   },
-  customFileInputLabel: {
+  [`& .${PREFIX}-customFileInputLabel`]: {
     cursor: 'pointer',
     padding: '10px 15px',
-    backgroundColor: '#3F51B5',  // Customize background color
-    color: 'white',             // Customize text color
+    backgroundColor: '#3F51B5',
+    color: 'white',
     borderRadius: '5px',
     fontSize: '16px',
     transition: 'background-color 0.3s',
     zIndex: 1,
     marginBottom: theme.spacing(1),
   },
-  hiddenInput: {
+  [`& .${PREFIX}-hiddenInput`]: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -56,23 +60,23 @@ const useStyles = makeStyles((theme) => ({
     zIndex: 2,
     cursor: 'pointer',
   },
-  errorText: {
+  [`& .${PREFIX}-errorText`]: {
     color: 'red',
     marginTop: theme.spacing(1),
   },
-  uploadedImage: {
+  [`& .${PREFIX}-uploadedImage`]: {
     maxWidth: '100%',
     maxHeight: '400px',
     margin: '20px 0',
   },
-  select: {
+  [`& .${PREFIX}-select`]: {
     minWidth: '150px',
     marginRight: theme.spacing(1),
   },
-  getDiagnosisButton: {
+  [`& .${PREFIX}-getDiagnosisButton`]: {
     marginTop: theme.spacing(2),
   },
-  closeIcon: {
+  [`& .${PREFIX}-closeIcon`]: {
     position: 'absolute',
     top: '5px',
     right: '5px',
@@ -89,11 +93,27 @@ const drClassToSeverity = {
 }
 
 function DiagnosisContent({ handleFileChange, selectedFile, error }) {
-  const classes = useStyles();
-  const options = ['Alexnet', 'VGG16', 'VGG19', 'SPPNet', 'GoogLeNet'];
+  const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState(() => localStorage.getItem('selectedOption') || '');
   const [loading, setLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState(false);
+
+  useEffect(() => {
+    fetchModelOptions();
+  }, []);
+
+  const fetchModelOptions = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/get_saved_models');
+      if (response.status != 200) {
+        throw new Error('Couldnt fetch data mush');
+      }
+      const data = response.data;
+      setOptions(data)
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
@@ -125,7 +145,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
       console.error(error.message);
     } finally {
       setLoading(false);
-    };
+    }
   };
     
   const handleRemoveImage = () => {
@@ -138,90 +158,100 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
   }
 
   return (
-    <main className={classes.fullWidth}>
-      <div className={classes.toolbar}>
-        <Typography variant='h6'>Diagnose DR</Typography>
-      </div>
-      <div className={classes.content}>
-        {loading && (
-          <div>
-            <Typography variant="h6">Loading...</Typography>
-            <CircularProgress />
-          </div>
-        )}
-        {!loading && selectedFile && !diagnosisResult && (
-          <div className={classes.imageContainer} style={{ position: 'relative' }}>
-            <Typography variant="subtitle1">Selected Image:</Typography>
-            <div style={{ position: 'relative' }}>
-              <img
-                src={URL.createObjectURL(selectedFile)}
-                alt="Selected"
-                className={classes.uploadedImage}
-              />
-              <IconButton
-                className={classes.closeIcon}
-                onClick={handleRemoveImage}
-              >
-                <CloseIcon />
-              </IconButton>
+    <Root className={`${PREFIX}-fullWidth`}>
+
+      <main className={`${PREFIX}-fullWidth`}>
+        <div className={`${PREFIX}-toolbar`}>
+          <Typography variant='h6'>Diagnose DR</Typography>
+        </div>
+        <div className={`${PREFIX}-content`}>
+          {loading && (
+            <div>
+              <Typography variant="h6">Loading...</Typography>
+              <CircularProgress />
             </div>
-          </div>
-        )}
-        {!loading && !diagnosisResult && (
-          <div className={classes.customFileInputContainer}>
-            <Select
-              value={selectedOption}
-              onChange={handleOptionChange}
-              className={classes.select}
-              displayEmpty
-            >
-              <MenuItem value="" disabled>
-                Choose model
-              </MenuItem>
-              {options.map((option, index) => (
-                <MenuItem key={index} value={option}>
-                  {option}
+          )}
+          {!loading && selectedFile && !diagnosisResult && (
+            <div className={`${PREFIX}-imageContainer`} style={{ position: 'relative' }}>
+              <Typography variant="subtitle1">Selected Image:</Typography>
+              <div style={{ position: 'relative' }}>
+                <img
+                  src={URL.createObjectURL(selectedFile)}
+                  alt="Selected"
+                  className={`${PREFIX}-uploadedImage`}
+                />
+                <IconButton
+                  className={`${PREFIX}-closeIcon`}
+                  onClick={handleRemoveImage}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </div>
+            </div>
+          )}
+          {!loading && !diagnosisResult && (
+            <div className={`${PREFIX}-customFileInputContainer`}>
+              <Select
+                value={selectedOption}
+                onChange={handleOptionChange}
+                className={`${PREFIX}-select`}
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  Choose model
                 </MenuItem>
-              ))}
-            </Select>
-            <label htmlFor="fileInput" className={classes.customFileInputLabel}>
-              Upload retinal image
-            </label>
-            <input
-              type="file"
-              id="fileInput"
-              onChange={handleFileChange}
-              capture="user"
-              className={classes.hiddenInput}
+                {options.map((option, index) => (
+                  <MenuItem key={index} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+              <label htmlFor="fileInput" className={`${PREFIX}-customFileInputLabel`}>
+                Upload retinal image
+              </label>
+              <input
+                type="file"
+                id="fileInput"
+                onChange={handleFileChange}
+                capture="user"
+                className={`${PREFIX}-hiddenInput`}
+              />
+            </div>
+          )}
+          {!loading && selectedFile && selectedOption && !diagnosisResult && (
+            <Button
+              variant='contained'
+              color='primary'
+              className={`${PREFIX}-getDiagnosisButton`}
+              onClick={handleGetDiagnosis}
+            >
+              Get DR diagnosis
+            </Button>
+          )}
+          {diagnosisResult && (
+            <DiagnosisResult
+            selectedFile={selectedFile}
+            diagnosis={diagnosisResult}
+            onGoBack={onGoBack}
             />
-          </div>
-        )}
-        {!loading && selectedFile && selectedOption && !diagnosisResult && (
-          <Button
-            variant='contained'
-            color='primary'
-            className={classes.getDiagnosisButton}
-            onClick={handleGetDiagnosis}
-          >
-            Get DR diagnosis
-          </Button>
-        )}
-        {diagnosisResult && (
-          <DiagnosisResult
-          selectedFile={selectedFile}
-          diagnosis={diagnosisResult}
-          onRemoveImage={handleRemoveImage}
-          onGoBack={onGoBack}
-          />
-        )}
-        {!loading && error && (
-          <Typography variant="body2" className={classes.errorText}>
-            {error}
-          </Typography>
-        )}
-      </div>
-    </main>
+          )}
+          {!loading && error && (
+            <Typography variant="body2" className={`${PREFIX}-errorText`}>
+              {error}
+            </Typography>
+          )}
+        </div>
+      </main>
+    </Root>
   );
 }
+
+DiagnosisContent.propTypes = {
+  handleFileChange: PropTypes.func.isRequired,
+  selectedFile: PropTypes.string,
+  error: PropTypes.shape({
+    message: PropTypes.string,
+  }),
+};
 
 export default DiagnosisContent;
