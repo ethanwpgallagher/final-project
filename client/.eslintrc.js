@@ -1,17 +1,29 @@
-// .eslintrc.js
-
 module.exports = {
-    parser: '@babel/eslint-parser', // Use babel-eslint parser for parsing JavaScript files
-    extends: ['eslint:recommended', 'plugin:react/recommended'],
-    plugins: ['react', 'react-hooks'],
-    rules: {
-      'react-hooks/rules-of-hooks': 'error', // Checks rules of Hooks
-      'react-hooks/exhaustive-deps': 'warn', // Checks effect dependencies
+  env: {
+    browser: true, // Adds browser global variables
+    es2021: true, // Specifies the version of ECMAScript syntax you're using
+    node: true,
+  },
+  parser: '@babel/eslint-parser',
+  parserOptions: {
+    requireConfigFile: false,
+    babelOptions: {
+      plugins: ['@babel/plugin-syntax-jsx'],
     },
-    settings: {
-      react: {
-        version: 'detect', // Automatically detect React version
-      },
+    ecmaFeatures: {
+      jsx: true, // Allows for the parsing of JSX
     },
-  };
-  
+  },
+  extends: ['eslint:recommended', 'plugin:react/recommended'],
+  plugins: ['react', 'react-hooks'],
+  rules: {
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+    'no-undef': 'error'
+  },
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
+};

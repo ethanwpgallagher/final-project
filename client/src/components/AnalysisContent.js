@@ -1,36 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { MenuItem, Typography, Select, Checkbox, ListItemText, FormControlLabel } from '@material-ui/core';
+import React, { useState, useEffect, useMemo } from 'react';
+import { styled } from '@mui/material/styles';
+import { MenuItem, Typography, Select, Checkbox, ListItemText, FormControlLabel } from '@mui/material';
 import axios from 'axios';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
-import { ConfusionMatrix } from 'react-confusion-matrix';
 
-const useStyles = makeStyles(theme => ({
-  toolbar: theme.mixins.toolbar,
-  title: {
+const PREFIX = 'AnalysisContent';
+
+const Root = styled('div')(({ theme }) => ({
+  [`&.${PREFIX}-toolbar`]: theme.mixins.toolbar,
+  [`& .${PREFIX}-title`]: {
     flexGrow: 1,
-    backgroundColor: theme.palette.background.default,
+    backgroundColour: theme.palette.background.default,
     padding: theme.spacing(3),
   },
-  content: {
+  [`& .${PREFIX}-content`]: {
     flexGrow: 1,
     padding: theme.spacing(3),
   },
-  fullWidth: {
+  [`& .${PREFIX}-fullWidth`]: {
     width: '100%',
   },
-  selectContainer: {
-    display: 'inline-block', // Align horizontally
+  [`& .${PREFIX}-selectContainer`]: {
+    display: 'inline-block',
     marginRight: theme.spacing(2),
   },
-  chartContainer: {
-    marginTop: theme.spacing(3),
+  [`& .${PREFIX}-chartContainer`]: {
+    width: '90vw', 
+    height: '40vw',
+    margin: theme.spacing(2),
   },
 }));
 
 function AnalysisContent() {
-  const classes = useStyles();
   const [models, setModels] = useState([]);
   const [selectedModels, setSelectedModels] = useState([]);
   const [selectedAnalysisOptions, setSelectedAnalysisOptions] = useState({
@@ -39,23 +41,74 @@ function AnalysisContent() {
   });
 
   const [logFetch, setLogFetch] = useState(null);
-
+  
   const [chartLabels, setChartLabels] = useState([]);
   const [chartData, setChartData] = useState({ datasets: [] });
-  
-  const [confMatLabels, setConfMatLabels] = useState([]);
-  const [confMatData, setConfMatData] = useState([]);
+  const [barData, setBarData] = useState({
+    labels: [],
+    datasets: []
+  });
+  const [colourMap, setColourMap] = useState({});
+  const [selectedTrainMetric, setSelectedTrainMetric] = useState('Accuracy');
+  const [selectedTestMetric, setSelectedTestMetric] = useState('Accuracy');
 
+  const assignColoursToModel = (modelName) => {
+    const lossColour = getRandomColour();
+    const accuracyColour = getRandomColour();
+    const valLossColour = getRandomColour();
+    const valAccuracyColour = getRandomColour();
+    const testAccuracyColour = getRandomColour();
+    const f1ScoreColour = getRandomColour();
+    const sensitivityColours = Array.from({ length: 5 }, () => getRandomColour());
+    const specificityColours = Array.from({ length: 5 }, () => getRandomColour());
+
+  
+    setColourMap(prevColourMap => ({
+      ...prevColourMap,
+      [modelName]: {
+        loss: lossColour,
+        accuracy: accuracyColour,
+        valLoss: valLossColour,
+        valAccuracy: valAccuracyColour,
+        "Test Accuracy": testAccuracyColour,
+        "F1 Score": f1ScoreColour,
+        "Sensitivity": sensitivityColours,
+        "Specificity": specificityColours
+      }
+    }));
+  }
+
+  const getColoursForModel = (modelName) => {
+    if (colourMap[modelName]) {
+      return colourMap[modelName];
+    }
+  
+    assignColoursToModel(modelName);
+    return colourMap[modelName];
+  }
+
+  const updateBarData = (newLabels, newDatasets) => {
+    setBarData({
+      labels: newLabels,
+      datasets: newDatasets
+    })
+  }
+    
   useEffect(() => {
     fetchModelOptionsandLogData();
   }, []);
-
+  
   useEffect(() => {
+    selectedModels.forEach(modelName => {
+      if (!colourMap[modelName]) {
+        assignColoursToModel(modelName);
+      }
+    });
     if (selectedModels.length > 0 && (selectedAnalysisOptions.training || selectedAnalysisOptions.test)) {
       changeGraphData();
     }
-  }, [selectedModels, selectedAnalysisOptions]);
-  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModels, selectedAnalysisOptions, colourMap, selectedTrainMetric, selectedTestMetric]);  
 
   const fetchModelOptionsandLogData = async () => {
     try {
@@ -87,117 +140,124 @@ function AnalysisContent() {
     }
   };
 
-  function getRandomColor() {
+  function getRandomColour() {
     const letters = '0123456789ABCDEF';
-    let color = '#';
+    let colour = '#';
     for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
+        colour += letters[Math.floor(Math.random() * 16)];
     }
-    return color;
+    return colour;
   }
 
+  useEffect(() => {
+    console.log('*USE EFFECT SECTION');
+    console.log(chartData);
+    console.log(barData);
+    console.log(selectedTrainMetric);
+    console.log(selectedTestMetric);
+    console.log('*END USE EFFECT SECTION');
+  }, [chartData, barData, selectedTestMetric, selectedTrainMetric]);
+
   const changeGraphData = async () => {
+    if (!logFetch || !logFetch.epoch_data || !logFetch.result_data || selectedModels.length < 1) return;
+    var labels = [];
+    let datasets = [];
     try {
-        const trainTestBoth = selectedAnalysisOptions.training ? 'training' : selectedAnalysisOptions.test ? 'test' : 'both';
-        var labels = [];
-        const datasets = [];
-        if (trainTestBoth === 'training') {
-          selectedModels.forEach(modelName => {
-              const modelEpochData = logFetch.epoch_data[modelName.split('.')[0]];
-              if (modelEpochData) {
-                  const modelLossData = [];
-                  const modelAccuracyData = [];
-                  const modelValLossData = [];
-                  const modelValAccuracyData = [];
-                  for (const epochNum in modelEpochData) {
-                      const epochData = modelEpochData[epochNum];
-                      modelLossData.push(epochData.loss);
-                      modelAccuracyData.push(epochData.accuracy);
-                      modelValLossData.push(epochData.val_loss);
-                      modelValAccuracyData.push(epochData.val_accuracy)
-                      labels.push(epochNum.toString());
-                  }
-                  datasets.push({
-                      label: `${modelName} - Loss`,
-                      data: modelLossData,
-                      borderColor: getRandomColor(),
-                      backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                  });
-                  datasets.push({
-                      label: `${modelName} - Accuracy`,
-                      data: modelAccuracyData,
-                      borderColor: getRandomColor(),
-                      backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                  });
-                  datasets.push({
-                      label: `${modelName} - Validation Loss`,
-                      data: modelValLossData,
-                      borderColor: getRandomColor(),
-                      backgroundColor: 'rgba(255, 206, 86, 0.2)',
-                  });
-                  datasets.push({
-                      label: `${modelName} - Validation Accuracy`,
-                      data: modelValAccuracyData,
-                      borderColor: getRandomColor(),
-                      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                  });
-              }
-          });
-          setChartLabels(Array.from(labels));
-          setChartData({ datasets });
-
-          console.log('Labels: ', chartLabels);
-          console.log('Data: ', chartData);
+      if (selectedAnalysisOptions.training && selectedTrainMetric) {
+        datasets = [];
         
-        } else if (trainTestBoth === 'test') {
-          selectedModels.forEach(modelName => {
-            const modelResultData = logFetch.result_data[modelName.split('.')[0]];
-            if (modelResultData) {
-              const modelTestAccuracy = modelResultData['Accuracy'];
-              const modelF1Score = modelResultData['F1 Score'];
-              const modelSensitivity = modelResultData['Sensitivity'];
-              const modelSpecificity = modelResultData['Specificity'];
-              
-              datasets.push({
-                label: `${modelName} - Test Accuracy`,
-                data: [modelTestAccuracy*100],
-                borderColor: getRandomColor(),
-                backgroundColor: getRandomColor(),
-              });
+        selectedModels.forEach(modelName => {
+          const colours = getColoursForModel(modelName);
+          const modelEpochData = logFetch.epoch_data[modelName.split('.')[0]];
 
-              datasets.push({
-                label: `${modelName} - F1 Score`,
-                data: [modelF1Score*100],
-                borderColor: getRandomColor(),
-                backgroundColor: getRandomColor(),
-              });
+          if (modelEpochData) {
+            const modelMetricData = [];
+            const modelMetricValData = []
+            Object.keys(modelEpochData).forEach(epochNum => {
+              const epochData = modelEpochData[epochNum];
+              if (selectedTrainMetric === 'Accuracy'){
+                let metricValue = epochData[selectedTrainMetric.toLowerCase()] * 100;
+                let valMetricValue = epochData['val_accuracy'] * 100;
+                modelMetricData.push(metricValue);
+                modelMetricValData.push(valMetricValue)
+              }
+              if (selectedTrainMetric === 'Loss'){
+                let metricValue = epochData[selectedTrainMetric.toLowerCase()];
+                let valMetricValue = epochData['val_loss'];
+                modelMetricData.push(metricValue);
+                modelMetricValData.push(valMetricValue)
+              }
+              labels.push(`Epoch ${epochNum}`);
+            });
 
+            datasets.push({
+              label: `${modelName} - ${selectedTrainMetric}`,
+              data: modelMetricData,
+              borderColor: colours[selectedTrainMetric.toLowerCase()],
+              backgroundColor: colours[selectedTrainMetric.toLowerCase()],
+            });
+            if (selectedTrainMetric === 'Accuracy') {
               datasets.push({
-                label: `${modelName} - Sensitivity`,
-                data: modelSensitivity.map(value => value * 100),
-                borderColor: getRandomColor(),
-                backgroundColor: getRandomColor(),
+                label: `${modelName} - Validation Accuracy`,
+                data: modelMetricValData,
+                borderColor: colours['valAccuracy'],
+                backgroundColor: colours['valAccuracy'],
               });
-
-              datasets.push({
-                label: `${modelName} - Specificity`,
-                data: modelSpecificity.map(value => value * 100),
-                borderColor: getRandomColor(),
-                backgroundColor: getRandomColor(),
-              });
-              const confusionMatrixLabels = ['No DR', 'Mild', 'Moderate', 'Severe', 'Proliferative DR'];
-              const modelConfMatrix = modelResultData['Confusion Matrix'];
-              setConfMatLabels(confusionMatrixLabels);
-              setConfMatData(modelConfMatrix);
             }
-          });
-        } else {
-          console.log('TODO');
-        }
+            if (selectedTrainMetric === 'Loss') {
+              datasets.push({
+                label: `${modelName} - Validation Loss`,
+                data: modelMetricValData,
+                borderColor: colours['valLoss'],
+                backgroundColor: colours['valLoss'],
+              });
+            }
+          }
+        });
+        
+        const maxEpochs = Math.max(...selectedModels.map(modelName => {
+          const modelEpochData = logFetch.epoch_data[modelName.split('.')[0]];
+          return modelEpochData ? Object.keys(modelEpochData).length : 0;
+        }));
+        const commonLabels = Array.from({length: maxEpochs}, (_, i) => (i+1).toString());
+        console.log('*****************************');
+        console.log('Datasets: ', datasets);
+        setChartLabels(commonLabels);
+        setChartData({ datasets });
+        console.log('Set chart data: ', chartData);
+      }
+      if (selectedAnalysisOptions.test && selectedTestMetric) {
+        let barDatasets = [];
+        let barLabels = selectedTestMetric === 'Sensitivity' || selectedTestMetric === 'Specificity'
+          ? [`Class 0 ${selectedTestMetric}`, `Class 1 ${selectedTestMetric}`, `Class 2 ${selectedTestMetric}`, `Class 3 ${selectedTestMetric}`, `Class 4 ${selectedTestMetric}`]
+          : [selectedTestMetric];
+        
+        selectedModels.forEach(modelName => {
+          const modelResultData = JSON.parse(logFetch.result_data[modelName.split('.')[0]]);
+          if (modelResultData) {
+            const colours = getColoursForModel(modelName);
+            const metricValues = modelResultData[selectedTestMetric];
+            
+            let datasetData = Array.isArray(metricValues) 
+              ? metricValues.map(value => value * 100)
+              : [metricValues * 100];
+            
+            const metricDataset = {
+              label: modelName,
+              backgroundColor: colours[selectedTestMetric],
+              data: datasetData,
+            };
+      
+            barDatasets.push(metricDataset);
+          }
+        });
+      
+        updateBarData(barLabels, barDatasets);
+      }
     } catch (error) {
         console.log(error.message);
     }
-};
+  };
     
   const handleModelChange = (event) => {
     setSelectedModels(event.target.value);
@@ -205,71 +265,181 @@ function AnalysisContent() {
 
   const handleAnalysisOptionChange = (event) => {
     setSelectedAnalysisOptions({
-      ...selectedAnalysisOptions,
+      training: false,
+      test: false,
       [event.target.name]: event.target.checked,
     });
   };
 
+  const chartOptions = useMemo(() => {
+    const isAccuracyMetric = ['Accuracy'].includes(selectedTrainMetric);
+  
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          min: 0,
+          max: isAccuracyMetric ? 100 : undefined, 
+          ticks: {
+            // Only append '%' for accuracy metrics
+            callback: function(value) {
+              return isAccuracyMetric ? `${value}%` : value;
+            }
+          },
+          title: {
+            display: true,
+            text: (() => {
+              if (selectedTrainMetric === 'Accuracy') return 'Percentage';
+              else if (selectedTrainMetric === 'Loss') return 'Loss';
+              return 'Value'; // Default title
+            })(),
+          }
+        },
+        x: {
+          ticks: {
+            maxTicksLimit: 20
+          },
+          title: {
+            display: true,
+            text: 'Epochs'
+          }
+        },
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+        },
+      }
+    };
+  }, [selectedTrainMetric]);
+
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        min: 0,
+        max: 100,
+        ticks: {
+          callback: function(value) {
+            return value + '%';
+          }
+        },
+        title: {
+          display: true,
+          text: 'Percentage'
+        }
+      },
+      x: {
+        ticks: {
+          maxTicksLimit: 100
+        },
+      },
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+      },
+    }
+  };
+
   return (
-    <main className={classes.fullWidth}>
-      <div className={classes.toolbar} />
-      <div className={classes.title}>
-        <Typography variant='h6'>Analyse models used</Typography>
-      </div>
-      <div className={classes.content}>
-        <div className={classes.selectContainer}>
-          <Select
-            multiple
-            value={selectedModels}
-            onChange={handleModelChange}
-            displayEmpty
-            renderValue={(selected) => selected.join(', ')}
-          >
-            <MenuItem value="" disabled>
-              Choose model
-            </MenuItem>
-            {models.map((model) => (
-              <MenuItem key={model} value={model}>
-                <Checkbox checked={selectedModels.indexOf(model) > -1} />
-                <ListItemText primary={model} />
+    <Root className={PREFIX}>
+      <main className={`${PREFIX}-fullWidth`}>
+        <div className={`${PREFIX}-toolbar`} />
+        <div className={`${PREFIX}-title`}>
+          <Typography variant='h6'>Analyse models used</Typography>
+        </div>
+        <div className={`${PREFIX}-content`}>
+          <div className={`${PREFIX}-selectContainer`}>
+            <Select
+              multiple
+              value={selectedModels}
+              onChange={handleModelChange}
+              displayEmpty
+              renderValue={(selected) => selected.join(', ')}
+            >
+              <MenuItem value="" disabled>
+                Choose model
               </MenuItem>
-            ))}
-          </Select>
+              {models.map((model) => (
+                <MenuItem key={model} value={model}>
+                  <Checkbox checked={selectedModels.indexOf(model) > -1} />
+                  <ListItemText primary={model} />
+                </MenuItem>
+              ))}
+            </Select>
+          </div>
+          <div className={`${PREFIX}-selectContainer`}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={selectedAnalysisOptions.training}
+                  onChange={handleAnalysisOptionChange}
+                  name="training"
+                />
+              }
+              label="Training"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={selectedAnalysisOptions.test}
+                  onChange={handleAnalysisOptionChange}
+                  name="test"
+                />
+              }
+              label="Test"
+            />
+          </div>
+          <div className={`${PREFIX}-selectContainer`}>
+            {selectedAnalysisOptions.test && (
+              <Select
+                value={selectedTestMetric}
+                onChange={(event) => setSelectedTestMetric(String(event.target.value))}
+                displayEmpty
+                renderValue={(selected) => selected || 'Select Metric'}
+              >
+                <MenuItem value="Accuracy">Accuracy</MenuItem>
+                <MenuItem value="F1 Score">F1 Score</MenuItem>
+                <MenuItem value="Sensitivity">Sensitivity</MenuItem>
+                <MenuItem value="Specificity">Specificity</MenuItem>
+              </Select>
+            )}
+            {selectedAnalysisOptions.training && (
+              <Select
+                value={selectedTrainMetric}
+                onChange={(event) => setSelectedTrainMetric(String(event.target.value))}
+                displayEmpty
+                renderValue={(selected) => selected || 'Select Metric'}
+              >
+                <MenuItem value="Accuracy">Accuracy</MenuItem>
+                <MenuItem value="Loss">Loss</MenuItem>
+              </Select>
+            )}
+          </div>
+          {
+            selectedModels.length > 0 && selectedAnalysisOptions.training ? (
+              <div className={`${PREFIX}-chartContainer`}>
+                <Line data={{ labels: chartLabels, datasets: chartData.datasets }} options={chartOptions} />
+              </div>
+            ) : selectedModels.length > 0 && selectedAnalysisOptions.test ? (
+              <div className={`${PREFIX}-chartContainer`}>
+                <Bar key={JSON.stringify(barData)} data={barData} options={barOptions}/>
+              </div>
+            ) : (
+              <div className={`${PREFIX}-chartContainer`}>
+                <Typography variant="subtitle1">Please select a model and analysis option to display the graph.</Typography>
+              </div>
+            )
+          }
         </div>
-        <div className={classes.selectContainer}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={selectedAnalysisOptions.training}
-                onChange={handleAnalysisOptionChange}
-                name="training"
-              />
-            }
-            label="Training"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={selectedAnalysisOptions.test}
-                onChange={handleAnalysisOptionChange}
-                name="test"
-              />
-            }
-            label="Test"
-          />
-        </div>
-        <div className={classes.chartContainer}>
-          <Line data={{ labels: chartLabels, datasets: chartData.datasets }} />
-      </div>
-      { confMatData && confMatLabels && (
-        <div className={classes.confMatContainer}>
-              <ConfusionMatrix data={confMatData} labels={confMatLabels}/>
-        </div>
-      )}
-      </div>
-    </main>
+      </main>
+    </Root>
   );
 }
 
 export default AnalysisContent;
-

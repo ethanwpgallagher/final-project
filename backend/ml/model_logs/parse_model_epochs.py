@@ -71,7 +71,7 @@ def load_logs_from_directory(directory):
     rtf_files = [f for f in os.listdir(logs_directory) if f.endswith('.rtf')]
 
     for rtf_file in rtf_files:
-        model_name = rtf_file.split('_')[0]
+        model_name = rtf_file.split('.')[0]
         file_path = os.path.join(logs_directory, rtf_file)
         log_text = read_rtf_file(file_path)
         parser = EpochLogParser(log_text)

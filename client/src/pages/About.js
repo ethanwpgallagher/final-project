@@ -2,24 +2,20 @@ import React from 'react';
 import TopMenu from '../components/TopMenu';
 import AboutContent from '../components/AboutContent';
 import Footer from '../components/Footer';
-import { makeStyles } from '@material-ui/core/styles';
+import { styled } from '@mui/material/styles';
 
-const useStyles = makeStyles(() => ({
-    root: {
-      display: 'flex',
-    },
-  }));
+const Root = styled('div')({
+  display: 'flex',
+});
 
 function About() {
-    const classes = useStyles();
-  
     return (
-      <div className={classes.root}>
+      <Root>
         <TopMenu />
         <AboutContent />
         <Footer />
-      </div>
+      </Root>
     );
-  }
-  
-  export default About;
+}
+
+export default About;

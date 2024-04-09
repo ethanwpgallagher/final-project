@@ -1,39 +1,39 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Typography } from '@material-ui/core';
+import { styled } from '@mui/material/styles';
+import { Typography } from '@mui/material';
 
-const useStyles = makeStyles(theme => ({
-  toolbar: theme.mixins.toolbar,
-  title: {
+const PREFIX = 'HomeContent';
+
+const Root = styled('main')(({ theme }) => ({
+  [`&.${PREFIX}-fullWidth`]: {
+    width: '100%',
+  },
+  [`& .${PREFIX}-toolbar`]: theme.mixins.toolbar,
+  [`& .${PREFIX}-title`]: {
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
     padding: theme.spacing(3),
   },
-  content: {
+  [`& .${PREFIX}-content`]: {
     flexGrow: 1,
     padding: theme.spacing(3),
-  },
-  fullWidth: {
-    width: '100%',
   },
 }));
 
 function HomeContent() {
-    const classes = useStyles();
-  
     return (
-      <main className={classes.fullWidth}>
-        <div className={classes.toolbar} />
-        <div className={classes.title}>
+      <Root className={`${PREFIX}-fullWidth`}>
+        <div className={`${PREFIX}-toolbar`} />
+        <div className={`${PREFIX}-title`}>
           <Typography variant='h6'>Diabetic Retinopathy Diagnosis Tool and Machine Learning Model Analysis</Typography>
         </div>
-        <div className={classes.content}>
+        <div className={`${PREFIX}-content`}>
           <Typography paragraph>
-            Welcome to ...., a Diabetic Retinopathy diagnosis tool to help faciliate diagnosis for DR and consequently diabetes mellitus. 
+            Welcome to ...., a Diabetic Retinopathy diagnosis tool to help facilitate diagnosis for DR and consequently diabetes mellitus.
           </Typography>
         </div>
-      </main>
+      </Root>
     );
-  }
-  
-  export default HomeContent;
+}
+
+export default HomeContent;

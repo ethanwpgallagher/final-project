@@ -6,7 +6,6 @@ import cv2
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from ml.ml_app import get_prediction, get_saved_model, get_saved_model_names
-from ml.preprocessing import preprocessing
 from ml.model_logs import parse_model_epochs, parse_model_results
 import numpy as np
 import os
@@ -63,12 +62,12 @@ def receive_predictions():
 @app.route('/get_model_analysis', methods=['POST'])
 def get_model_analysis():
     try:
-        selected_models = request.form.get('models')
+        selected_models = request.form.get('models').split(',')
         if not (selected_models):
             raise ValueError("Invalid input format. 'models' not set")
         epoch_return = {}
         result_return = {}
-        for name in selected_models.split('%2C'):
+        for name in selected_models:
             name = name.split('.')[0]
             epoch_return[name] = epoch_log_parsers[name]
             result_return[name] = serialized_results[name]
@@ -77,7 +76,6 @@ def get_model_analysis():
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         response.status_code = 200
         response_content = response.get_data(as_text=True)
-        app.logger.debug(f"Response content: {response_content}")
         return response
     except Exception as e:
         print(e, file=sys.stderr)
