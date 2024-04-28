@@ -3,6 +3,12 @@ FROM python:3.9
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    libhdf5-dev  # Add the HDF5 library here
+
 # Install API dependencies
 COPY api/requirements.txt api/requirements.txt
 RUN pip install --upgrade pip && pip install -r api/requirements.txt

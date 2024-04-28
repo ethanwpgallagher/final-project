@@ -29,7 +29,8 @@ function HomeContent() {
         </div>
         <div className={`${PREFIX}-content`}>
           <Typography paragraph>
-            Welcome to ...., a Diabetic Retinopathy diagnosis tool to help facilitate diagnosis for DR and consequently diabetes mellitus.
+            Welcome to a Diabetic Retinopathy diagnosis tool.
+            Please choose an option from the navigation bar at the top
           </Typography>
         </div>
       </Root>

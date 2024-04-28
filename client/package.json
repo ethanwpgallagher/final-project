@@ -10,21 +10,20 @@
     "axios": "^0.24.0",
     "chart.js": "^4.4.2",
     "history": "^5.3.0",
+    "punycode": "^2.3.1",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-confusion-matrix": "^1.1.8",
     "react-dom": "^18.2.0",
     "react-jsx-runtime": "^1.0.0-alpha.1",
-    "react-redux": "^9.1.0",
     "react-router-dom": "^6.22.2",
     "react-scripts": "^5.0.0",
-    "redux": "^5.0.1",
     "styled-components": "^6.1.8"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "NODE_OPTIONS='--no-deprecation' react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

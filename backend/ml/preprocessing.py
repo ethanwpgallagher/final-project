@@ -146,3 +146,15 @@ def kaggle_augment_testing_image(image):
     image = cv2.warpAffine(image, rotation_matrix, (width, height))
 
     return image
+
+file_path = '/Users/ethan/Downloads/diabetic-retinopathy-detection-2/new-train/test/4/8745_right.jpeg'
+img = cv2.imread(file_path)
+img = cv2.addWeighted(img, 4, cv2.GaussianBlur(img, (0,0), 10), -4, 128)
+img = cv2.resize(img, (224, 224))
+img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+img = cv2.medianBlur(img, 5)
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+img = clahe.apply(img)
+img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+plt.imshow(img)
+plt.show()

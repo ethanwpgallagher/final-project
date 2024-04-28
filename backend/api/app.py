@@ -39,7 +39,6 @@ def receive_predictions():
         image = cv2.resize(image, (224, 224))
         image = np.stack((image,)*3, axis=-1)
         print(image.shape, file=sys.stderr)
-        # image = preprocessing(image, (224, 224), False)
 
         model = get_saved_model(str(selected_model))
         if model is not None:
@@ -79,7 +78,6 @@ def get_model_analysis():
         response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         response.status_code = 200
-        response_content = response.get_data(as_text=True)
         return response
     except Exception as e:
         print(e, file=sys.stderr)

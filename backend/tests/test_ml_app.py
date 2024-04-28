@@ -4,6 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import keras
 import ml.ml_app as ml_app
+import sys
 
 BASE_DIR = os.path.dirname(os.path.abspath(ml_app.__file__))
 
@@ -14,21 +15,20 @@ def mock_keras_model():
     return model
 
 def test_get_saved_model_names():
-    with patch("os.listdir") as mocked_listdir:
-        mocked_listdir.return_value = ["model1.h5", "model2.h5"]
-        model_names = ml_app.get_saved_model_names()
-        mocked_listdir.assert_called_once_with(os.path.join(BASE_DIR, 'saved_models'))
-        assert "model1.h5" in model_names
-        assert "model2.h5" in model_names
+    expected_files = ["alexnet.keras", "densenet.keras", "inceptionv3.keras", "mobilenet.keras", "resnet.keras"]
+    model_names = ml_app.get_saved_model_names()
+    assert sorted(model_names) == sorted(expected_files), "The model names list does not match expected"
 
 def test_get_saved_model():
-    model_name = "model1.h5"
-    with patch("keras.models.load_model") as mocked_load_model:
-        ml_app.get_saved_model(model_name)
-        mocked_load_model.assert_called_once_with(os.path.join(BASE_DIR, 'saved_models', model_name))
+    model_name = "alexnet.keras"
+    model_path = os.path.join(BASE_DIR, 'saved_models', model_name)
+    assert os.path.exists(model_path), "Model file does not exist."
+
+    model = ml_app.get_saved_model(model_name)
+    assert isinstance(model, keras.models.Model), "The loaded object is not a Keras model."
 
 def test_get_prediction(mock_keras_model):
+    mock_keras_model = ml_app.get_saved_model("alexnet.keras")
     test_input = np.random.rand(224, 224, 3)
     predictions = ml_app.get_prediction(mock_keras_model, test_input)
-    mock_keras_model.predict.assert_called_once()
-    assert predictions.shape == (1, 2)
+    assert predictions.shape == (1, 5)
