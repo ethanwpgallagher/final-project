@@ -9,7 +9,7 @@ jest.mock('axios');
 describe('AnalysisContent', () => {
   beforeEach(() => {
     axios.get.mockResolvedValue({
-      data: ['Model1', 'Model2'], // Mocked models data
+      data: ['Model1', 'Model2'],
       status: 200
     });
     axios.post.mockResolvedValue({

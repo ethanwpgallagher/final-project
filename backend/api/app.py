@@ -1,9 +1,7 @@
-import base64
-from io import BytesIO
 import logging
 import sys
 import cv2
-from flask import Flask, jsonify, make_response, request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from ml.ml_app import get_prediction, get_saved_model, get_saved_model_names
 from ml.model_logs import parse_model_epochs, parse_model_results
@@ -32,6 +30,8 @@ def receive_predictions():
         image_bytes = selected_file.read()
 
         image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+        img = cv2.addWeighted(image, 4, cv2.GaussianBlur(image, (0,0), 10), -4, 128)
+        img = cv2.resize(img, (224, 224))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = cv2.medianBlur(image, 5)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))

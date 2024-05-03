@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import HomeContent from '../components/HomeContent';
 
 describe('HomeContent', () => {
+  // check the component renders and the content is as expected
   test('renders correctly', () => {
     render(<HomeContent />);
 

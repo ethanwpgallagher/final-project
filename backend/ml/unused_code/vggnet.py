@@ -1,3 +1,5 @@
+# old model no longer used. Huge performance issues, vanishing gradient problem!
+
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from keras import datasets, layers, models, losses, applications

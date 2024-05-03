@@ -21,6 +21,7 @@ const Root = styled('div')({
   },
 });
 
+// renders the links to each page, and this component features on every page
 function TopMenu() {
   return (
     <Root>

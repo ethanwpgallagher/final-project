@@ -9,6 +9,7 @@ describe('TopMenu Component', () => {
     return render(<BrowserRouter>{component}</BrowserRouter>);
   };
 
+  // check the component renders and all the links are correct for navigation
   test('renders menu items with correct navigation links', () => {
     renderWithRouter(<TopMenu />);
 

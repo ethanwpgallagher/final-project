@@ -1,6 +1,8 @@
+# unused model - changed to inceptionv3
+
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from keras import datasets, layers, models, Model, losses
+from keras import datasets, layers, Model, losses
 
 def inception_module(
         x,

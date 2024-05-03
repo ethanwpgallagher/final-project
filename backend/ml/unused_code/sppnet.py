@@ -1,3 +1,5 @@
+# original model chosen, no longer used
+
 import tensorflow as tf
 from tensorflow_addons.layers import SpatialPyramidPooling2D
 import matplotlib.pyplot as plt

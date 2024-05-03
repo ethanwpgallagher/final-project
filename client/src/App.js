@@ -7,6 +7,7 @@ import Analysis from './pages/Analysis';
 import About from './pages/About';
 
 function App() {
+  // defines all the routes within the app
   return (
     <Router>
       <Routes>

@@ -1,13 +1,16 @@
+# a collation of different preprocessing techniques used over the development stages of the project
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
     
+# original steps
 def preprocessing(img, img_size, path_needed):
     if path_needed:
         original_img = cv2.imread(img)
-        img_path = "path/to/save/processed_image.jpg"  # Modify the path as needed
+        img_path = "path/to/save/processed_image.jpg"
         img = original_img.copy()
     else:
         img_path = None
@@ -50,7 +53,8 @@ def display_image(img, title):
     plt.axis('off')
     plt.show()
 
-def treeve_function_hopeful_fix(img):
+# hopeful fix using image thresholding
+def hopeful_fix(img):
     picture = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     blurred_picture = cv2.GaussianBlur(picture, (15,15), cv2.BORDER_DEFAULT)
@@ -74,12 +78,13 @@ def treeve_function_hopeful_fix(img):
 
     return final_img
     
+#all the functions below were for end of stage 1 and stage 2 of development
 def kaggle_bloke_preprocessing(img_path, scale=300):
     try:
         img = cv2.imread(img_path)
         img = green_channel_extraction(img)
         img = scaleRadius(img, scale)
-        img = treeve_function_hopeful_fix(img)
+        img = hopeful_fix(img)
         img = cv2.GaussianBlur(img, (3,3), 0)
         img = cv2.resize(img, (224, 224))
         cv2.imwrite(img_path, img)
@@ -88,15 +93,6 @@ def kaggle_bloke_preprocessing(img_path, scale=300):
         print(f'{e}')
         input()
         pass
-
-def hopeful_preprocessing(img_path):
-    img = cv2.imread(img_path)
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    img = cv2.medianBlur(img, 5)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    img = clahe.apply(img)
-    img = cv2.resize(img, (224,224))
-    cv2.imwrite(img_path, img)
 
 def scaleRadius(img, scale):
     x=img[img.shape[0]//2 ,:, :].sum(1) 
@@ -147,14 +143,12 @@ def kaggle_augment_testing_image(image):
 
     return image
 
-file_path = '/Users/ethan/Downloads/diabetic-retinopathy-detection-2/new-train/test/4/8745_right.jpeg'
-img = cv2.imread(file_path)
-img = cv2.addWeighted(img, 4, cv2.GaussianBlur(img, (0,0), 10), -4, 128)
-img = cv2.resize(img, (224, 224))
-img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-img = cv2.medianBlur(img, 5)
-clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-img = clahe.apply(img)
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-plt.imshow(img)
-plt.show()
+# the eventual steps used for the aptos dataset, now in the notebook
+def hopeful_preprocessing(img_path):
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    img = cv2.medianBlur(img, 5)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    img = clahe.apply(img)
+    img = cv2.resize(img, (224,224))
+    cv2.imwrite(img_path, img)

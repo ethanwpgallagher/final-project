@@ -1,3 +1,6 @@
+# old code for training the models before the realisation that personal hardware wasnt powerful enough. Moved over to colab
+# also contains some file processing code
+
 import csv
 from datetime import datetime
 import random
@@ -8,10 +11,9 @@ import shutil
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-from alexnet import alex_net
 from vggnet import vgg_16, vgg_19
 from sklearn.utils.class_weight import compute_class_weight
-from preprocessing import preprocessing, kaggle_augment_training_image, kaggle_bloke_preprocessing, treeve_function_hopeful_fix, hopeful_preprocessing
+from backend.ml.unused_code.preprocessing import preprocessing, kaggle_augment_training_image, kaggle_bloke_preprocessing, hopeful_preprocessing
 import cv2
 
 DATASET_DIRECTORY = "/Users/ethan/Downloads/diabetic-retinopathy-detection-2/train"
@@ -31,9 +33,9 @@ def sort_dataset():
                 image_name, label, _ = row
                 label_dict[image_name + '.jpeg'] = label
 
-    # for label in set(label_dict.values()):
-    #     label_directory = os.path.join(DATASET_DIRECTORY, label)
-    #     os.makedirs(label_directory, exist_ok=True)
+    for label in set(label_dict.values()):
+        label_directory = os.path.join(DATASET_DIRECTORY, label)
+        os.makedirs(label_directory, exist_ok=True)
     
     return label_dict
 
@@ -46,27 +48,20 @@ def make_full_training_set(label_dict):
             shutil.move(source_path, destination_path)
 
 def copy_random_images(source_directory, destination_directory, num_images_per_class=10):
-    # Create the destination directory if it doesn't exist
     os.makedirs(destination_directory, exist_ok=True)
 
-    # Iterate over subdirectories in the source directory
     for class_dir in os.listdir(source_directory):
         class_path = os.path.join(source_directory, class_dir)
 
-        # Check if it's a directory
         if os.path.isdir(class_path):
             dest_class_path = os.path.join(destination_directory, class_dir)
             os.makedirs(dest_class_path, exist_ok=True)
-            # List all files in the class directory
             class_files = [f for f in os.listdir(class_path) if f.lower().endswith(('.jpg', '.jpeg'))]
 
-            # Randomly select num_images_per_class images
             selected_images = random.sample(class_files, min(num_images_per_class, len(class_files)))
 
-            # Copy selected images to the destination directory
             for image in selected_images:
                 source_path = os.path.join(class_path, image)
-                # Create a unique filename in the destination directory
                 destination_filename = f"{image}"
                 destination_path = os.path.join(destination_directory, class_path, destination_filename)
                 shutil.copyfile(source_path, destination_path)
@@ -267,67 +262,3 @@ def apply_data_augmentation(image, label):
     else:
         augmented_image = image
     return augmented_image, label
-
-if __name__ == "__main__":
-    # test_class_folders = get_class_folders(os.path.join(NEW_DATASET_DIRECTORY, "test"))
-    # train_class_folders = get_class_folders(os.path.join(NEW_DATASET_DIRECTORY, "train"))
-
-    # # Plot average image statistics per class in test and train folders
-    # print("Average image statistics per class in test folder:")
-    # plot_average_image_statistics_per_class(test_class_folders)
-
-    # print("Average image statistics per class in train folder:")
-    # plot_average_image_statistics_per_class(train_class_folders)
-    # create_new_dataset(DATASET_DIRECTORY, NEW_DATASET_DIRECTORY)
-    # new_process_images_in_directory(MESSIDOR)
-    for i in range(50):
-        maybe_augment_folder(MESSIDOR)
-        print(get_class_weights(MESSIDOR))
-    # testing_set = '/Users/ethan/Desktop/ComputerScienceUniWork/Year 3/FinalProject/final-project/backend/ml/testing_images'
-    # for root, dirs, files in os.walk(testing_set):
-    #     for file in files:
-    #         file_path = os.path.join(root, file)
-    #         if file_path.endswith(('.jpeg', '.jpg', '.png')):
-    #             kaggle_bloke_preprocessing(file_path)
-    # train_ds, val_ds = load_dataset()
-    # augmented_train_ds = train_ds.map(apply_data_augmentation)
-    # alexnet = alex_net(input_shape=(224, 224, 3))
-
-    # # Build the model
-    # alexnet.build(input_shape=(224, 224, 3))
-
-    # # Compile the model
-    # epochs = 20
-    # log_dir = './logs'
-    # callbacks = [
-    #     keras.callbacks.ModelCheckpoint("alexnet_at_{epoch}.keras"),
-    #     keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, write_images=True),
-    #     keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
-    # ]
-
-    # alexnet.summary()
-    # alexnet.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-    # history = alexnet.fit(
-    #     augmented_train_ds,
-    #     epochs=epochs,
-    #     callbacks=callbacks,
-    #     validation_data=val_ds,
-    #     class_weight=dict(enumerate(get_class_weights(directory=DATASET_DIRECTORY)))
-    #     )
-        
-    # fig, axs = plt.subplots(2, 1, figsize=(15, 15))
-    # axs[0].plot(history.history['loss'])
-    # axs[0].plot(history.history['val_loss'])
-    # axs[0].set_title('Training Loss vs Validation Loss')
-    # axs[0].set_xlabel('Epochs')
-    # axs[0].set_ylabel('Loss')
-    # axs[0].legend(['Train', 'Val'])
-    # axs[1].plot(history.history['accuracy'])
-    # axs[1].plot(history.history['val_accuracy'])
-    # axs[1].set_title('Training Accuracy vs Validation Accuracy')
-    # axs[1].set_xlabel('Epochs')
-    # axs[1].set_ylabel('Accuracy')
-    # axs[1].legend(['Train', 'Val'])
-    # plt.show()
-

@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from 'prop-types';
 import { Typography, Button } from "@mui/material";
 
+// defines props for correct usage
 DiagnosisResult.propTypes = {
     selectedFile: PropTypes.object,
     diagnosis: PropTypes.string,
@@ -12,6 +13,7 @@ function DiagnosisResult({ selectedFile, diagnosis, onGoBack }) {
     return (
         <div>
             <Typography variant="h6">Diagnosis Result</Typography>
+            {/* display the selected image if it exists */}
             {selectedFile && (
                 <div>
                     <Typography variant="subtitle1">Selected Image:</Typography>

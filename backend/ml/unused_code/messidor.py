@@ -1,3 +1,5 @@
+# used to create the messidor training/testing sets, change of dataset renders this useless
+
 import random
 import pandas as pd
 import numpy as np
@@ -9,6 +11,7 @@ import csv
 from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
 label_dict = {}
 TESTING_SET_DIRECTORY = '/Users/ethan/Downloads/Messidor2/train copy/test'
+
 # Messidor 1
 def read_labels__and_make_dict_mess1(directory):
     files = os.listdir(directory)
