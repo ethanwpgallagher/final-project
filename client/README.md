@@ -1,68 +1,45 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# ECM3401 Final Project by Ethan Gallagher - Frontend
 
-## Available Scripts
+## Description
+This is the web application developed for ECM3401 Final Project, with the accompanying paper titled "A Comparative Analysis of Convolutional Neural Network Architectures for Diagnosing Diabetic Retinopathy".
 
-In the project directory, you can run:
+This file details the information regarding the frontend section of the codebase, with information on folder structure and functionality.
+The developed code is inside the folder src, so this README is primarily about that section.
+## Table of Contents
+- [src](#src)
+    - [Pages](#pages)
+    - [Components](#components)
+    - [Tests](#tests)
+- [Package.json and node_modules](#packagejson-and-node_modules)
+- [Dockerfile](#dockerfile)
 
-### `npm start`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+## src
+### Pages
+Contains the code for the separate pages displayed in the web application, which each contain different components which change based on certain conditions on that page
+- About.js -> displays the about page and its respective component for the application
+- Analysis.js -> displays the model analysis page outline, with the AnalysisComponent inside it
+- Diagnosis.js -> display the diagnosis page outline with DiagnosisContent and Result components inside
+- Home.js -> displays the home page outline
+### Components
+The components sit inside the pages and change based on specified conditions in the application
+- AboutContent.js -> display information about the application
+- AnalysisContent.js -> displays the graphs containing the data on each models training and testing performances
+- DiagnosisContent.js -> contains the dropdown menu and upload retinal image button to receive a DR diagnosis
+- DiagnosisResult.js -> displays the diagnosis given from the backend for the uploaded image
+- Footer.js -> displays the footer
+- HomeContent.js -> displays the content on the home page
+- TopMenu.js -> contains and displays the different page options, where clicking them takes you to said page. Accessible from any page in the application
+### Tests
+Contains unit tests for every page and component in the application. To run, make sure you're inside the 'client' folder and run the command
+```
+npm test
+```
+## Package.json and node_modules
+The package.json file lists all of the different packages required for the application. When npm starts the application, these are all installed and can be found in the node_modules folder
+## Dockerfile
+The Dockerfile here is used to start the frontend docker container and start running the react web app.
+## Usage
+This repository is only permitted for use by the markers of ECM3401.
+## Contact
+If there are any issues, please contact me via the following:
+- Email - eg546@exeter.ac.uk

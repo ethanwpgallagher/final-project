@@ -84,6 +84,7 @@ const Root = styled('main')(({ theme }) => ({
   },
 }));
 
+// dictionary mapping values to outputs
 const drClassToSeverity = {
   '0': 'No DR',
   '1' : 'Mild DR',
@@ -93,15 +94,18 @@ const drClassToSeverity = {
 }
 
 function DiagnosisContent({ handleFileChange, selectedFile, error }) {
+  // state hooks for model options, loading animation and the diagnosis result
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState(() => localStorage.getItem('selectedOption') || '');
   const [loading, setLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState(false);
 
+  // gets saved models on load
   useEffect(() => {
     fetchModelOptions();
   }, []);
 
+  // fetches the saved models from the backend
   const fetchModelOptions = async () => {
     try {
       const response = await axios.get('http://localhost:5000/get_saved_models');
@@ -120,6 +124,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
     localStorage.setItem('selectedOption', event.target.value);
   };
 
+  // sends the backend the selected model and uploaded image for diagnosis, which is then set
   const handleGetDiagnosis = async () => {
     setLoading(true);
   
@@ -139,6 +144,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
       }
   
       const result = await response.json();
+      // mapping the result using the dictionary defined above
       setDiagnosisResult(drClassToSeverity[result.diagnosis]);
       console.log(diagnosisResult);
     } catch (error) {
@@ -157,6 +163,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
     setDiagnosisResult(null);
   }
 
+  // displays the component
   return (
     <Root className={`${PREFIX}-fullWidth`}>
 
@@ -218,6 +225,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
               />
             </div>
           )}
+          {/* Only display the button if a model has been selected and an image uploaded */}
           {!loading && selectedFile && selectedOption && !diagnosisResult && (
             <Button
               variant='contained'

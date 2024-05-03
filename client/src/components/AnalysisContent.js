@@ -33,6 +33,7 @@ const Root = styled('div')(({ theme }) => ({
 }));
 
 function AnalysisContent() {
+  // state hooks for managing the models, analysis options, chart data etc
   const [models, setModels] = useState([]);
   const [selectedModels, setSelectedModels] = useState([]);
   const [selectedAnalysisOptions, setSelectedAnalysisOptions] = useState({
@@ -52,6 +53,7 @@ function AnalysisContent() {
   const [selectedTrainMetric, setSelectedTrainMetric] = useState('Accuracy');
   const [selectedTestMetric, setSelectedTestMetric] = useState('Accuracy');
 
+  // assigning a colour for each models metric to be used
   const assignColoursToModel = (modelName) => {
     const lossColour = getRandomColour();
     const accuracyColour = getRandomColour();
@@ -98,6 +100,7 @@ function AnalysisContent() {
     fetchModelOptionsandLogData();
   }, []);
   
+  // assigns the colours set earlier to the models and changes the graph data
   useEffect(() => {
     selectedModels.forEach(modelName => {
       if (!colourMap[modelName]) {
@@ -110,6 +113,7 @@ function AnalysisContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModels, selectedAnalysisOptions, colourMap, selectedTrainMetric, selectedTestMetric]);  
 
+  // function to fetch model options and log data from the server
   const fetchModelOptionsandLogData = async () => {
     try {
       const response = await axios.get('http://localhost:5000/get_saved_models');
@@ -149,6 +153,7 @@ function AnalysisContent() {
     return colour;
   }
 
+  // updates the chart and bar data when the training and testing metric selection changes
   useEffect(() => {
     console.log('*USE EFFECT SECTION');
     console.log(chartData);
@@ -158,6 +163,7 @@ function AnalysisContent() {
     console.log('*END USE EFFECT SECTION');
   }, [chartData, barData, selectedTestMetric, selectedTrainMetric]);
 
+  // changes the graph data based on what the selected models and metrics are
   const changeGraphData = async () => {
     if (!logFetch || !logFetch.epoch_data || !logFetch.result_data || selectedModels.length < 1) return;
     var labels = [];
@@ -169,7 +175,7 @@ function AnalysisContent() {
         selectedModels.forEach(modelName => {
           const colours = getColoursForModel(modelName);
           const modelEpochData = logFetch.epoch_data[modelName.split('.')[0]];
-
+           // training data
           if (modelEpochData) {
             const modelMetricData = [];
             const modelMetricValData = []
@@ -220,12 +226,11 @@ function AnalysisContent() {
           return modelEpochData ? Object.keys(modelEpochData).length : 0;
         }));
         const commonLabels = Array.from({length: maxEpochs}, (_, i) => (i+1).toString());
-        console.log('*****************************');
-        console.log('Datasets: ', datasets);
         setChartLabels(commonLabels);
         setChartData({ datasets });
-        console.log('Set chart data: ', chartData);
       }
+
+      // testing metric selected
       if (selectedAnalysisOptions.test && selectedTestMetric) {
         let barDatasets = [];
         let barLabels = selectedTestMetric === 'Sensitivity' || selectedTestMetric === 'Specificity'
@@ -271,6 +276,7 @@ function AnalysisContent() {
     });
   };
 
+  // sets the options for the training data chart
   const chartOptions = useMemo(() => {
     const isAccuracyMetric = ['Accuracy'].includes(selectedTrainMetric);
   
@@ -292,7 +298,7 @@ function AnalysisContent() {
             text: (() => {
               if (selectedTrainMetric === 'Accuracy') return 'Percentage';
               else if (selectedTrainMetric === 'Loss') return 'Loss';
-              return 'Value'; // Default title
+              return 'Value';
             })(),
           }
         },
@@ -315,6 +321,7 @@ function AnalysisContent() {
     };
   }, [selectedTrainMetric]);
 
+  // options for the bar graphs for the testing metrics
   const barOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -346,6 +353,7 @@ function AnalysisContent() {
     }
   };
 
+  // render the component information
   return (
     <Root className={PREFIX}>
       <main className={`${PREFIX}-fullWidth`}>
