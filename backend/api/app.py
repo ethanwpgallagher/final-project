@@ -8,25 +8,33 @@ from ml.model_logs import parse_model_epochs, parse_model_results
 import numpy as np
 import os
 
+# Initialize Flask app with Cross-Origin Resource Sharing (CORS)
 app = Flask(__name__)
 CORS(app)
 app.logger.setLevel(logging.DEBUG)
+
+# Load logs for epochs and results from directories
 epoch_log_parsers = parse_model_epochs.load_logs_from_directory(os.path.dirname(os.path.dirname(__file__)))
 result_log_parsers = parse_model_results.load_logs_from_directory(os.path.dirname(os.path.dirname(__file__)))
 serialized_results = {model_name: parser.__json__() for model_name, parser in result_log_parsers.items()}
 
 @app.route('/receive_predictions', methods=['POST'])
 def receive_predictions():
+    """
+    Handle POST requests to receive predictions for uploaded images using a selected model.
+    """
     try:
         selected_model = request.form.get('selectedOption')
 
         selected_file = request.files.get('selectedFile')
         
+        # Validate input
         if not (selected_model and selected_file):
             app.logger.error("Invalid input format. 'selectedOption' and 'selectedFile' are required.")
             return jsonify({'error': "Invalid input format. 'selectedOption' and 'selectedFile' are required."}), 400
 
 
+        # Read the image file and preprocess for prediction
         image_bytes = selected_file.read()
 
         image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
@@ -38,8 +46,8 @@ def receive_predictions():
         image = clahe.apply(image)
         image = cv2.resize(image, (224, 224))
         image = np.stack((image,)*3, axis=-1)
-        print(image.shape, file=sys.stderr)
 
+        # Load model and predict diagnosis
         model = get_saved_model(str(selected_model))
         if model is not None:
             diagnosis = get_prediction(model, image).tolist()
@@ -51,6 +59,7 @@ def receive_predictions():
         app.logger.error(f"Error occurred: {str(e)}")
         return jsonify({'error': str(e)}), 500 
 
+    # Set headers and send response
     response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     response.status_code = 200
@@ -62,10 +71,15 @@ def receive_predictions():
 
 @app.route('/get_model_analysis', methods=['POST'])
 def get_model_analysis():
+    """
+    Provide information for analysis for selected models by returning their epoch and result logs.
+    """
     try:
         selected_models = request.form.get('models').split(',')
         if not selected_models:
             return jsonify({'error': "Invalid input format. 'models' not set"}), 500
+        
+        # Fetch and compile model data
         epoch_return = {}
         result_return = {}
         for name in selected_models:
@@ -85,6 +99,9 @@ def get_model_analysis():
 
 @app.route('/get_saved_models', methods=['GET'])
 def get_saved_models():
+    """
+    Retrieve names of saved models available for prediction.
+    """
     try:
         saved_models = get_saved_model_names()
         return jsonify(saved_models)
@@ -92,7 +109,9 @@ def get_saved_models():
         return jsonify({'error': str(e)}), 500
 
 def get_class_from_probabilities(probabilities):
-    print(probabilities, file=sys.stderr)
+    """
+    Determine class label from model prediction probabilities.
+    """
     predicted_index = np.argmax(probabilities)
     class_labels = ['0', '1', '2', '3', '4']
     return class_labels[predicted_index]

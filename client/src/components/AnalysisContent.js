@@ -363,6 +363,7 @@ function AnalysisContent() {
         </div>
         <div className={`${PREFIX}-content`}>
           <div className={`${PREFIX}-selectContainer`}>
+            {/** Dropdown to select a model if available */}
             <Select
               multiple
               value={selectedModels}
@@ -382,6 +383,7 @@ function AnalysisContent() {
             </Select>
           </div>
           <div className={`${PREFIX}-selectContainer`}>
+            {/** Form to select training or testing */}
             <FormControlLabel
               control={
                 <Checkbox
@@ -404,6 +406,7 @@ function AnalysisContent() {
             />
           </div>
           <div className={`${PREFIX}-selectContainer`}>
+            {/** Form to select testing metric */}
             {selectedAnalysisOptions.test && (
               <Select
                 value={selectedTestMetric}
@@ -417,6 +420,7 @@ function AnalysisContent() {
                 <MenuItem value="Specificity">Specificity</MenuItem>
               </Select>
             )}
+            {/** Form to select training metric */}
             {selectedAnalysisOptions.training && (
               <Select
                 value={selectedTrainMetric}
@@ -432,14 +436,17 @@ function AnalysisContent() {
           {
             selectedModels.length > 0 && selectedAnalysisOptions.training ? (
               <div className={`${PREFIX}-chartContainer`}>
+                {/** Displays training data graph */}
                 <Line data={{ labels: chartLabels, datasets: chartData.datasets }} options={chartOptions} />
               </div>
             ) : selectedModels.length > 0 && selectedAnalysisOptions.test ? (
               <div className={`${PREFIX}-chartContainer`}>
+                {/** Displays testing data graph */}
                 <Bar key={JSON.stringify(barData)} data={barData} options={barOptions}/>
               </div>
             ) : (
               <div className={`${PREFIX}-chartContainer`}>
+                {/** Informs user how to display graph if the right information is not selected */}
                 <Typography variant="subtitle1">Please select a model and analysis option to display the graph.</Typography>
               </div>
             )

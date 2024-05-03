@@ -178,6 +178,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
               <CircularProgress />
             </div>
           )}
+          {/** Give the option to delete an image if there is one uploaded and no result present */}
           {!loading && selectedFile && !diagnosisResult && (
             <div className={`${PREFIX}-imageContainer`} style={{ position: 'relative' }}>
               <Typography variant="subtitle1">Selected Image:</Typography>
@@ -196,6 +197,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
               </div>
             </div>
           )}
+          {/** Display model selection and image upload button if not loading and no result present */}
           {!loading && !diagnosisResult && (
             <div className={`${PREFIX}-customFileInputContainer`}>
               <Select
@@ -236,6 +238,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
               Get DR diagnosis
             </Button>
           )}
+          {/** Display diagnosis result when available */}
           {diagnosisResult && (
             <DiagnosisResult
             selectedFile={selectedFile}
@@ -243,6 +246,7 @@ function DiagnosisContent({ handleFileChange, selectedFile, error }) {
             onGoBack={onGoBack}
             />
           )}
+          {/** Display error text if necessary*/}
           {!loading && error && (
             <Typography variant="body2" className={`${PREFIX}-errorText`}>
               {error}
